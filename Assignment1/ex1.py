@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
-import numpy as np 
-import pandas as pd
-from scipy.special import factorial as fac
+import numpy as np
+
 
 def convergence_list(N_list,uk_func):
 
