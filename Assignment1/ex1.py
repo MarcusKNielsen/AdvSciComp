@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np 
 import pandas as pd
+from scipy.special import factorial as fac
 
 def convergence_list(N_list,uk_func):
 
@@ -42,23 +43,24 @@ def match_uk(uk,uk_approx):
 
     return np.allclose(uk,uk_approx,rtol=0.1,atol=0.1)
 
-def main():
+
+if __name__ == "__main__":
 
     # Analytical function 
     u_func = lambda x: 1/(2-np.cos(x)) # Remove pi, to let x = [0:2pi]
     #u_func = lambda x: x
-
+    
     # Fourier coefficients
-    uk_func = lambda k: 1/np.sqrt(3)*(2-np.sqrt(3))**(k+0j)
+    uk_func = lambda k: 1/np.sqrt(3)*(2-np.sqrt(3))**np.abs(k)
+    
     #uk_func = lambda k: np.where(k == 0, np.pi + 0j, 1j / k) # test kode eksempel fra slide
 
     # Initializations
-    N = 100
+    N = 64
     N_list = np.arange(2,N,2) # Only even numbers
     trunc_err = convergence_list(N_list,uk_func)
     k_lin = np.arange(-N/2,N/2)
-    x_lin = np.linspace(0,2*np.pi,1000)
-
+    
     # Convergence plot
     plt.figure(1)
     plt.semilogy(N_list,trunc_err)
@@ -66,10 +68,10 @@ def main():
     plt.ylabel(r"$||\tau||^2$")
     plt.title("Convergence plot")
 
-    #%% Discrete fourier transform
+    # Discrete fourier transform
 
     uk_approx = {} # Using dictionary
-    for Ni in np.array([4,8,16,32,64]): # Changing the size of N that is the number of waves
+    for Ni in np.array([4,8,16,32,64,128]): # Changing the size of N that is the number of waves
         uk_approx[Ni] = discrete_fourier_coefficients(u_func,Ni) # Discrete fourier transformation
         k_lin_temp = np.arange(-Ni/2,Ni/2) 
         match = match_uk(uk_func(k_lin_temp),uk_approx[Ni])      # Matching the discrete FT with the analytical
@@ -83,6 +85,8 @@ def main():
     plt.ylabel("uk")
     plt.legend()
 
+    x_lin = np.linspace(0,2*np.pi,Ni)
+
     # Approximating function using fourier coefficients
     u_approx_analytical = fourier_approx(k_lin_temp,x_lin,uk_func(k_lin_temp))
     u_approx_discrete = fourier_approx(k_lin_temp,x_lin,uk_approx[Ni])
@@ -93,10 +97,6 @@ def main():
     plt.plot(x_lin,u_approx_discrete.real,label="u discrete")
     plt.legend()
     plt.show()
-
-if __name__ == "__main__":
-
-    main()
 
 
 
