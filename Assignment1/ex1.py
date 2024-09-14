@@ -1,6 +1,18 @@
+#%%
 import matplotlib.pyplot as plt
 import numpy as np
 
+
+def check_N(N):
+
+    if (N%2) == 0: 
+        N_even = N 
+        k_lin = np.arange(-N_even/2,N_even/2)
+    else:
+        N_odd = N - 1 
+        k_lin = np.arange(-N_odd/2,N_odd/2+1)
+
+    return k_lin
 
 def convergence_list(N_list,fourier_approx,u_func,uk_func):
 
@@ -8,11 +20,7 @@ def convergence_list(N_list,fourier_approx,u_func,uk_func):
 
     for N in N_list:
 
-        #k_lin_pos = np.arange(N/2+1,10001)
-        #k_lin_neg = np.arange(-10000,-(N/2+1)+1)
-        #trunc_err.append(2*np.pi*sum(np.abs(uk_func(np.concatenate([k_lin_neg,k_lin_pos])))**2))
-
-        k_lin = np.arange(-N/2,N/2+1)
+        k_lin = check_N(N)
         x_lin = np.linspace(0,2*np.pi,N)
 
         u_approx = fourier_approx(k_lin,x_lin,uk_func(k_lin))
@@ -30,23 +38,51 @@ def fourier_approx(k_lin,x_lin,uk):
 
 def discrete_fourier_coefficients(k_lin,u_func=lambda x: 1/(2-np.cos(x))):
 
-    N = len(k_lin)-1
+    N = len(k_lin) 
     uk_approx   = np.zeros_like(k_lin,dtype=complex)
 
-    for k_idx,k in enumerate(k_lin): 
-        s = 0
-        for j in range(N+1):
-            xj = 2*np.pi*j/(N+1)
-            s += u_func(xj)*np.exp(-1j*k*xj) 
+    if (N%2) == 0:
 
-        uk_approx[k_idx] = s/(N+1)
+        for k_idx,k in enumerate(k_lin): 
+            s = 0
+
+            ck = lambda ck_k: 2 if np.abs(ck_k) == N/2 else 1
+
+            for j in range(N):
+                xj = 2*np.pi*j/N 
+                s += (u_func(xj)/ck(k))*np.exp(-1j*k*xj) 
+
+            uk_approx[k_idx] = s/N
+    else:
+
+        for k_idx,k in enumerate(k_lin): 
+            s = 0
+            for j in range(N+1):
+                xj = 2*np.pi*j/N
+                s += u_func(xj)*np.exp(-1j*k*xj) 
+
+            uk_approx[k_idx] = s/N
 
     return uk_approx
+
+def lagrange_interpolation(xj,x,N):
+
+    h_even = lambda xj, x: np.where(x == xj, 1, (1/N * np.sin(N/2 * (x-xj)) * (1/np.tan(1/2 * (x-xj)))))
+    h_odd  = lambda xj, x: np.where(x == xj, 1, (1/N)*np.sin((x-xj)*N/2)/np.sin((x-xj)/2))
+    h = lambda xj,x,N: h_even(xj,x) if (N%2)== 0 else h_odd(xj,x)
+
+    return h(xj,x,N)
 
 def match_uk(uk,uk_approx):
 
     return np.allclose(uk,uk_approx,rtol=0.1,atol=0.1)
 
+def v(x):
+    return np.exp(np.sin(x))
+
+def diff_v(x):
+    # The analytical derivative of the function v in exercise d
+    return np.cos(x)*np.exp(np.sin(x))
 
 # Analytical function 
 u_func = lambda x: 1/(2-np.cos(x)) # Remove pi, to let x = [0:2pi]
@@ -54,7 +90,7 @@ u_func = lambda x: 1/(2-np.cos(x)) # Remove pi, to let x = [0:2pi]
 # Fourier coefficients
 uk_func = lambda k: 1/(np.sqrt(3)*(2+np.sqrt(3))**np.abs(k))
 
-# Discrete fourier coefficients
+# Discrete Fourier coefficients
 uk_approx_func = lambda k: discrete_fourier_coefficients(k,u_func=u_func)
 
 
@@ -78,7 +114,7 @@ plt.xlabel("N")
 plt.ylabel(r"$||\tau||^2$")
 plt.legend(fontsize=12) 
 plt.title("Convergence Plot (logarithmic y-axis)")
-plt.show()
+#plt.show()
 
 #%%
 
@@ -92,19 +128,20 @@ fontsize = 12
 
 # N = 4
 N1 = 4
-k_lin1 = np.arange(-N1/2, N1/2 + 1)
+k_lin1 = check_N(N1)
 
 uk_approx1 = discrete_fourier_coefficients(k_lin1).real
 uk_exact1 = uk_func(k_lin1)
 
 # N = 10
 N2 = 10
-k_lin2 = np.arange(-N2/2, N2/2 + 1)
+k_lin2 = check_N(N2)
 
 uk_approx2 = discrete_fourier_coefficients(k_lin2).real
 uk_exact2 = uk_func(k_lin2)
 
 # Create a 2x2 grid for the subplots
+plt.figure(1)
 fig, axs = plt.subplots(2, 2, figsize=(10, 8))
 
 # First subplot (N = 4, comparison of Fourier coefficients)
@@ -139,7 +176,7 @@ axs[1, 1].set_title(r"Approx vs Exact with $N=10$", fontsize=fontsize)
 plt.tight_layout()
 
 # Display the plot
-plt.show()
+#plt.show()
 
 #%%
 
@@ -148,25 +185,24 @@ Exercise 1: b)
 Convergence of fourier coefficients
 """
 
-N_list = np.array([4,8,16,32,64])
 N_list = np.arange(4,128,4)
 
 err = np.zeros_like(N_list,dtype=float)
 for i,Ni in enumerate(N_list): # Changing the size of N that is the number of waves
 
-    k_lin = np.arange(-Ni/2,Ni/2+1) 
+    k_lin = check_N(Ni)
     uk_approx = discrete_fourier_coefficients(k_lin,u_func).real # Discrete fourier transformation
     uk_exact  = uk_func(k_lin)
     err[i] = np.max(np.abs(uk_approx-uk_exact))
     
 
-plt.figure()
+plt.figure(2)
 plt.plot(N_list,np.log(err),"o-",label=r"$\max_k \ |\tilde{u}_k - \hat{u}_k|$")
 plt.xlabel("N")
 plt.ylabel(r"Error")
 plt.title("Convergence of Fourier Coefficients")
 plt.legend(fontsize=12)
-plt.show()
+#plt.show()
 
 
 #%%
@@ -176,15 +212,14 @@ if __name__ == "__main__":
 
     # Initializations
     N = 64
-    N_convergence_list = np.array([4,8,16,32,64,128])
     N_convergence_list = np.arange(4,128,4)
     trunc_err = convergence_list(N_convergence_list,fourier_approx,u_func,uk_func)
-    k_lin = np.arange(-N/2,N/2+1)
+    k_lin = check_N(N)
     
     # Convergence plot
-    plt.figure(1)
+    plt.figure(3)
     plt.semilogy(N_convergence_list,trunc_err,"o-",label=r"Numerical: $||u - P_Nu ||^2$")
-    plt.semilogy(N_convergence_list[:-17],norm_2_tau(N_convergence_list[:-17]),label=r"Analytical: $||\tau||^2 \sim e^{- \alpha \frac{N}{2}}$")
+    #plt.semilogy(N_convergence_list[:-17],norm_2_tau(N_convergence_list[:-17]),label=r"Analytical: $||\tau||^2 \sim e^{- \alpha \frac{N}{2}}$")
     plt.xlabel("N")
     plt.ylabel(r"$||\tau||^2$")
     plt.legend()
@@ -195,13 +230,12 @@ if __name__ == "__main__":
     uk_approx = {} # Using dictionary
     for Ni in N_convergence_list: # Changing the size of N that is the number of waves
 
-        k_lin_temp = np.arange(-Ni/2,Ni/2+1) 
+        k_lin_temp = check_N(Ni) 
         uk_approx[Ni] = discrete_fourier_coefficients(k_lin_temp,u_func) # Discrete fourier transformation
         match = match_uk(uk_func(k_lin_temp),uk_approx[Ni])      # Matching the discrete FT with the analytical
-        print(match)
 
     # Plotting the analytical uk vs the approximated
-    plt.figure(2)
+    plt.figure(4)
     plt.plot(k_lin_temp,uk_approx[Ni],"o-",label=f"N={Ni}")
     plt.plot(k_lin_temp,uk_func(k_lin_temp),"o-",label="uk analytical")
     plt.xlabel("k")
@@ -210,13 +244,13 @@ if __name__ == "__main__":
 
     Ni = 10
     x_lin = np.linspace(0,2*np.pi,Ni)
-    k_lin_temp = np.arange(-Ni/2,Ni/2+1) 
+    k_lin_temp = check_N(Ni)
     # Approximating function using fourier coefficients
     u_approx_analytical = fourier_approx(k_lin_temp,x_lin,uk_func(k_lin_temp))
     u_approx_discrete = fourier_approx(k_lin_temp,x_lin,uk_approx_func(k_lin_temp))
 
     # Plotting the approximated function values
-    plt.figure(3)
+    plt.figure(5)
     plt.plot(x_lin,u_approx_analytical.real,label="u analytical")
     plt.plot(x_lin,u_approx_discrete.real,label="u discrete")
     plt.legend()
@@ -224,7 +258,7 @@ if __name__ == "__main__":
     # Comparison of convergence using analytical and discrete
     trunc_err_approx = convergence_list(N_convergence_list,fourier_approx,u_func,uk_approx_func)
 
-    plt.figure(4)
+    plt.figure(6)
     plt.semilogy(N_convergence_list,trunc_err,label="Analytical")
     plt.semilogy(N_convergence_list,trunc_err_approx,label="Discrete")
     plt.xlabel("N")
@@ -232,6 +266,60 @@ if __name__ == "__main__":
     plt.legend()
     plt.title("Convergence plot")
 
+    #%% Lagrange interpolation Exercise C
+
+    # Initializations
+    k_lin   = check_N(10)
+    N       = len(k_lin)
+    j_lin   = np.arange(0,N)
+    xj      = 2*np.pi*j_lin/(N)
+
+    x = np.linspace(0,2*np.pi,1000) 
+
+    # Visualizing the lagrange polynomials
+    plt.figure(7)
+
+    for j_idx in range(N):
+        
+        y = lagrange_interpolation(xj[j_idx],x,N)
+        plt.plot(x,y,label="$j_{idx}$"+f"={j_idx}")
+
+        pointx = xj
+        pointy = lagrange_interpolation(xj[j_idx],xj,N)
+        plt.scatter(pointx,pointy,label="$j_{idx}$"+f"={j_idx}")
+
+    plt.title("Lagrange polynomials")
+    plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3)
+    plt.tight_layout()
+
+    Dh = lambda xj, x, N: np.where(
+        np.abs(x - xj) < 1e-1, 
+        0, 
+        (N * np.cos(N / 2 * (x - xj)) * np.cos((x / 2) - (xj / 2)) * np.sin((x / 2) - (xj / 2)) - 
+        np.sin(N / 2 * (x - xj)) /
+        (2 * N * (np.sin((x / 2) - (xj / 2))**2)))
+    )
+
+    plt.figure(8)
+    plt.plot(x,Dh(xj[2],x,N),label="dh/dx")
+    plt.plot(x,10*lagrange_interpolation(xj[2],x,N),label="h")
+    plt.legend()
+    #plt.scatter(xj,Dh(xj[2],xj,N))
+
+
+    D = np.zeros([N,N])
+    for j in j_lin:
+        D[:,j] = Dh(xj[j],xj,N)
+
+    Dv_approx = D@v(xj)
+
+    Dv_exact = diff_v(xj)    
+
+    plt.figure(9)
+    plt.plot(xj,Dv_exact,label="exact")
+    plt.plot(xj,Dv_approx,label="approx")
+    plt.grid()
     plt.show()
 
+    debug = True
 
