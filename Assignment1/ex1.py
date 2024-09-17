@@ -79,10 +79,25 @@ def match_uk(uk,uk_approx):
 
 def v(x):
     return np.exp(np.sin(x))
+    #return np.sin(x)
 
 def diff_v(x):
     # The analytical derivative of the function v in exercise d
     return np.cos(x)*np.exp(np.sin(x))
+    #return np.cos(x)
+
+def D_matrix(N,xj,j_lin):
+    Dh = lambda xj,x,N: np.where(
+        np.abs(x-xj) < 1e-12,
+        0,
+        (np.cos(N*(x - xj)/2)*np.cos(x/2 - xj/2)*N*np.sin(x/2 - xj/2) - np.sin(N*(x - xj)/2))/(2*np.sin(x/2 - xj/2)**2*N)
+    )
+
+    D = np.zeros([N,N])
+    for j in j_lin:
+        D[:,j] = Dh(xj[j],xj,N)
+    
+    return D,Dh
 
 # Analytical function 
 u_func = lambda x: 1/(2-np.cos(x)) # Remove pi, to let x = [0:2pi]
@@ -270,56 +285,153 @@ if __name__ == "__main__":
     #%% Lagrange interpolation Exercise C
 
     # Initializations
-    k_lin   = check_N(10)
+    k_lin   = check_N(6)
     N       = len(k_lin)
     j_lin   = np.arange(0,N)
     xj      = 2*np.pi*j_lin/(N)
 
-    x = np.linspace(0,2*np.pi,1000) 
+    x_lin = np.linspace(0,2*np.pi,100) 
 
     # Visualizing the lagrange polynomials
     plt.figure(7)
 
     for j_idx in range(N):
         
-        y = lagrange_interpolation(xj[j_idx],x,N)
-        plt.plot(x,y,label="$j_{idx}$"+f"={j_idx}")
+        y = lagrange_interpolation(xj[j_idx],x_lin,N)
+        plt.plot(x_lin,y,label="$j_{idx}$"+f"={j_idx}")
 
         pointx = xj
         pointy = lagrange_interpolation(xj[j_idx],xj,N)
         plt.scatter(pointx,pointy,label="$j_{idx}$"+f"={j_idx}")
 
+    plt.xlabel("x")
+    plt.ylabel("$h_j$(x)")
     plt.title("Lagrange polynomials")
     plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3)
     plt.tight_layout()
 
-    Dh = lambda xj, x, N: np.where(
-        np.abs(x - xj) < 1e-1, 
-        0, 
-        (N * np.cos(N / 2 * (x - xj)) * np.cos((x / 2) - (xj / 2)) * np.sin((x / 2) - (xj / 2)) - 
-        np.sin(N / 2 * (x - xj)) /
-        (2 * N * (np.sin((x / 2) - (xj / 2))**2)))
-    )
+    D,Dh = D_matrix(N,xj,j_lin)
 
     plt.figure(8)
-    plt.plot(x,Dh(xj[2],x,N),label="dh/dx")
-    plt.plot(x,10*lagrange_interpolation(xj[2],x,N),label="h")
+    plt.plot(x_lin,Dh(xj[2],x_lin,N),label="dh/dx")
+    plt.plot(x_lin,10*lagrange_interpolation(xj[2],x_lin,N),label="h")
     plt.legend()
-    #plt.scatter(xj,Dh(xj[2],xj,N))
-
-
-    D = np.zeros([N,N])
-    for j in j_lin:
-        D[:,j] = Dh(xj[j],xj,N)
 
     Dv_approx = D@v(xj)
-
     Dv_exact = diff_v(xj)    
 
     plt.figure(9)
     plt.plot(xj,Dv_exact,label="exact")
     plt.plot(xj,Dv_approx,label="approx")
     plt.grid()
+
+
+    # Plot 10
+    Dv_exact = diff_v(x_lin)   
+    plt.figure(10)
+    plt.plot(x_lin,Dv_exact,label="v'(x)")
+
+
+    # Plot approximate diff for several N and the convergence plot
+    err = []
+    for Nc in N_convergence_list:
+        j_lin_loop   = np.arange(0,Nc)
+        xj_loop      = 2*np.pi*j_lin_loop/(Nc)
+        D,_     = D_matrix(Nc,xj_loop,j_lin_loop)
+        Dv_approx = D@v(xj_loop) 
+        Dv_exact = diff_v(xj_loop)  
+
+        err.append(np.max(np.abs(Dv_approx-Dv_exact)))
+
+        # Add on plot 9
+        Dv_approx = D@v(xj_loop) 
+        plt.plot(xj_loop,Dv_approx,label=f"$Dv$ for N = {Nc}",linestyle='--')
+        plt.xlabel("N")
+        plt.ylabel("Dv")
+        plt.legend()
+        plt.grid()
+        
+    plt.figure(11)
+    plt.semilogy(N_convergence_list,err)
+    plt.xlabel("N")
+    plt.ylabel("||v'(x)-Dv||")
+    plt.grid()
+
+
+
+    #%% Opgave f start ----------------------------------------------------------
+
+    #%% Fast fourier transform
+
+    from scipy.fftpack import fft, ifft
+
+    k_lin_FFt = np.fft.fftfreq(N, d=(2 * np.pi) / N) * 2 * np.pi
+    dvdx = ifft(1j*k_lin_FFt*fft(v(xj))).real
+    D,Dh = D_matrix(N,xj,j_lin)
+    Dv_approx = D@v(xj)
+    Dv_exact = diff_v(x_lin)  
+
+    plt.figure(12)
+    plt.plot(x_lin,Dv_exact,label="exact")
+    plt.plot(xj,Dv_approx,'-',label="approx")
+    plt.plot(xj,dvdx,'--',label="FFT")
+    plt.legend()
+    plt.title("FFT using N=6")
+    plt.xlabel("x")
+    plt.ylabel("dv/dx")
+    plt.grid()
+
+    #%% FFT performance study 
+
+    from time import perf_counter
+
+    times_FFT = []
+    times_Mat = []
+    err_FFT = []
+
+    for Nc in N_convergence_list:
+
+        # Initializations for both methods
+        k_lin_FFt = np.fft.fftfreq(Nc, d=(2 * np.pi) / Nc) * 2 * np.pi
+        j_lin_loop   = np.arange(0,Nc)
+        xj_loop      = 2*np.pi*j_lin_loop/(Nc)
+        D,Dh = D_matrix(Nc,xj_loop,j_lin_loop)
+
+        # Timing FFT
+        t_FFT = perf_counter()
+        dvdx = ifft(1j*k_lin_FFt*fft(v(xj_loop))).real
+        t_FFT = perf_counter()-t_FFT
+
+        # Timing matrix
+        t_Dv = perf_counter()
+        Dv_approx = D@v(xj_loop)
+        t_Dv = perf_counter()- t_Dv
+
+        times_FFT.append(t_FFT)
+        times_Mat.append(t_Dv)
+
+        # Saving the err to use for convergence
+        Dv_exact = diff_v(xj_loop)
+        err_FFT.append(np.max(np.abs(dvdx-Dv_exact)))
+
+
+    plt.figure(13)
+    plt.semilogy(N_convergence_list,err,label="Mat convergence")
+    plt.semilogy(N_convergence_list,err_FFT,label="FFT convergence")
+    plt.xlabel("N")
+    plt.ylabel("||v'(x)-Dv||")
+    plt.legend()
+    plt.grid()
+
+    # Performance study plot
+    plt.figure(14)
+    plt.semilogy(N_convergence_list,times_FFT,label="Times of FFT (s)")
+    plt.semilogy(N_convergence_list,times_Mat,label="Times of Mat (s)")
+    plt.xlabel("N")
+    plt.ylabel("s")
+    plt.legend()
+
+
     plt.show()
 
     debug = True
