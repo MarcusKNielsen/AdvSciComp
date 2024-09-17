@@ -259,8 +259,9 @@ if __name__ == "__main__":
     trunc_err_approx = convergence_list(N_convergence_list,fourier_approx,u_func,uk_approx_func)
 
     plt.figure(6)
-    plt.semilogy(N_convergence_list,trunc_err,label="Analytical")
-    plt.semilogy(N_convergence_list,trunc_err_approx,label="Discrete")
+    plt.semilogy(N_convergence_list,trunc_err,"o-",label=r"Numerical: $||u - P_Nu ||^2$")
+    plt.semilogy(N_convergence_list,trunc_err_approx,"o-",label="Discrete")
+    plt.semilogy(N_list[:-17],(2-np.sqrt(3))**(N_list[:-17]/2),label=r"Analytical: $||\tau||^2 \sim e^{- \alpha \frac{N}{2}}$")
     plt.xlabel("N")
     plt.ylabel(r"$||\tau||^2$")
     plt.legend()
