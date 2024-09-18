@@ -42,12 +42,11 @@ def discrete_fourier_coefficients(k_lin,u_func=lambda x: 1/(2-np.cos(x))):
     uk_approx   = np.zeros_like(k_lin,dtype=complex)
 
     if (N%2) == 0:
-
+        
+        ck = lambda ck_k: 2 if np.abs(ck_k) == N/2 else 1
+        
         for k_idx,k in enumerate(k_lin): 
             s = 0
-
-            ck = lambda ck_k: 2 if np.abs(ck_k) == N/2 else 1
-
             for j in range(N):
                 xj = 2*np.pi*j/N 
                 s += (u_func(xj)/ck(k))*np.exp(-1j*k*xj) 
@@ -66,7 +65,6 @@ def discrete_fourier_coefficients(k_lin,u_func=lambda x: 1/(2-np.cos(x))):
     return uk_approx
 
 def lagrange_interpolation(xj,x,N):
-
     h_even = lambda xj, x: np.where(x == xj, 1, (1/N * np.sin(N/2 * (x-xj)) * (1/np.tan(1/2 * (x-xj)))))
     h_odd  = lambda xj, x: np.where(x == xj, 1, (1/N)*np.sin((x-xj)*N/2)/np.sin((x-xj)/2))
     h = lambda xj,x,N: h_even(xj,x) if (N%2)== 0 else h_odd(xj,x)
@@ -156,7 +154,6 @@ uk_approx2 = discrete_fourier_coefficients(k_lin2).real
 uk_exact2 = uk_func(k_lin2)
 
 # Create a 2x2 grid for the subplots
-plt.figure(1)
 fig, axs = plt.subplots(2, 2, figsize=(10, 8))
 
 # First subplot (N = 4, comparison of Fourier coefficients)
@@ -226,10 +223,10 @@ if __name__ == "__main__":
 
 
     # Initializations
-    N = 64
-    N_convergence_list = np.arange(4,128,4)
+    #N = 64
+    N_convergence_list = np.arange(4,64*2,4)
     trunc_err = convergence_list(N_convergence_list,fourier_approx,u_func,uk_func)
-    k_lin = check_N(N)
+    #k_lin = check_N(N)
     
     # Convergence plot
     plt.figure(3)
@@ -239,7 +236,8 @@ if __name__ == "__main__":
     plt.ylabel(r"$||\tau||^2$")
     plt.legend()
     plt.title("Convergence Plot (Semilog)")
-
+    
+    
     # Discrete fourier transform
 
     uk_approx = {} # Using dictionary
@@ -300,9 +298,9 @@ if __name__ == "__main__":
         y = lagrange_interpolation(xj[j_idx],x_lin,N)
         plt.plot(x_lin,y,label="$j_{idx}$"+f"={j_idx}")
 
-        pointx = xj
-        pointy = lagrange_interpolation(xj[j_idx],xj,N)
-        plt.scatter(pointx,pointy,label="$j_{idx}$"+f"={j_idx}")
+        #pointx = xj
+        #pointy = lagrange_interpolation(xj[j_idx],xj,N)
+        #plt.scatter(pointx,pointy,label="$j_{idx}$"+f"={j_idx}")
 
     plt.xlabel("x")
     plt.ylabel("$h_j$(x)")
@@ -333,15 +331,18 @@ if __name__ == "__main__":
 
 
     # Plot approximate diff for several N and the convergence plot
-    err = []
-    for Nc in N_convergence_list:
+
+    N_convergence_list = np.arange(4,64*10,8)
+    err = np.zeros(len(N_convergence_list))
+    for idx,Nc in enumerate(N_convergence_list):
         j_lin_loop   = np.arange(0,Nc)
         xj_loop      = 2*np.pi*j_lin_loop/(Nc)
         D,_     = D_matrix(Nc,xj_loop,j_lin_loop)
         Dv_approx = D@v(xj_loop) 
         Dv_exact = diff_v(xj_loop)  
 
-        err.append(np.max(np.abs(Dv_approx-Dv_exact)))
+        err[idx] = np.max(np.abs(Dv_approx-Dv_exact))
+        #err.append(np.max(np.abs(Dv_approx-Dv_exact)))
 
         # Add on plot 9
         Dv_approx = D@v(xj_loop) 
@@ -383,6 +384,7 @@ if __name__ == "__main__":
 
     #%% FFT performance study 
 
+
     from time import perf_counter
 
     times_FFT = []
@@ -416,8 +418,8 @@ if __name__ == "__main__":
 
 
     plt.figure(13)
-    plt.semilogy(N_convergence_list,err,label="Mat convergence")
-    plt.semilogy(N_convergence_list,err_FFT,label="FFT convergence")
+    plt.semilogy(N_convergence_list,err,"o-",label="Mat convergence")
+    plt.semilogy(N_convergence_list,err_FFT,"o-",label="FFT convergence")
     plt.xlabel("N")
     plt.ylabel("||v'(x)-Dv||")
     plt.legend()
@@ -425,10 +427,10 @@ if __name__ == "__main__":
 
     # Performance study plot
     plt.figure(14)
-    plt.semilogy(N_convergence_list,times_FFT,label="Times of FFT (s)")
-    plt.semilogy(N_convergence_list,times_Mat,label="Times of Mat (s)")
+    plt.semilogy(N_convergence_list,times_FFT,"o-",label="Times of FFT")
+    plt.semilogy(N_convergence_list,times_Mat,"o-",label="Times of Mat")
     plt.xlabel("N")
-    plt.ylabel("s")
+    plt.ylabel("Time [seconds]")
     plt.legend()
 
 
