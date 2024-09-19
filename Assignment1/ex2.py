@@ -103,7 +103,16 @@ if __name__ == "__main__":
     #%% j 
 
     # Construction of Vandermonde matrix:
-    
+
+    N = 6 # given grid points
+
+    V = np.array(N,N)
+
+    for i in range(N):
+        for j in range(N):
+            V[i,j] = JacobiP(x,alpha=0,beta=0,N=N)
+
+
 
     plt.show()
 
