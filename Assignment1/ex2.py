@@ -6,7 +6,10 @@ from JacobiGL import JacobiGL
 
 def JacobiP(x,alpha,beta,N):
 
-    J_nm2 = np.ones(len(x)) # J_{n-2}
+    if x.size > 1:
+        J_nm2 = np.ones(len(x)) # J_{n-2}
+    else:
+        J_nm2 = 1
     J_nm1 = 1/2*(alpha-beta+(alpha+beta+2)*x) # J_{n-1}
 
     if N==0:
@@ -55,55 +58,22 @@ def Jacobi_visualize(N=6):
 
         plt.tight_layout()
 
-def discrete_poly_coefficients(k_lin,N,alpha=0,beta=0,u_func=lambda x: 1/(2-np.cos(x))):
+def u_approx_func(x,xj,N,alpha=0,beta=0):
 
-    uk_approx   = np.zeros_like(k_lin,dtype=complex)
-        
-    for k_idx,k in enumerate(k_lin): 
-        s = 0
+    u_approx = 0
+
+    for k in np.arange(len(x)): 
+        uk = 0
         yk = 0
-        for j in N:
-            xj = 2*np.pi*j/N # Ikke rigtige skal ændres !!
-            wj = (1-xj)**alpha+(1+xj)**beta
-            phi_k = JacobiP(xj,alpha=0,beta=0,N=j)
-            s += (u_func(xj))*phi_k*wj
+        for j in range(N):
+            wj = (1-xj[j])**alpha+(1+xj[j])**beta
+            phi_k = JacobiP(xj[j],alpha=0,beta=0,N=j)
+            uk += (u_func(xj[j]))*phi_k*wj
             yk += phi_k**2*wj 
 
-        uk_approx[k_idx] = s/yk
-
-    return uk_approx
-
-def poly_approx(N,x_lin,uk):
-
-    N_arange = np.arange(N)
-
-    def u_approx_func(x):
-        sum = 0
-        for k in N_arange:
-            sum += uk*JacobiP(x,0,0,k) # Outer sum
-        return sum
-
-    u_approx = np.array([u_approx_func(x) for x in x_lin])
-
+        u_approx += uk*JacobiP(x,alpha=0,beta=0,N=k)/yk
+    
     return u_approx
-
-def convergence_list_poly(N_list,fourier_approx,u_func,uk_func,k_lin=np.arange(200)):
-
-    trunc_err = []
-
-    for N in N_list:
-
-        k_lin = np.arange(200)
-        x_lin = np.linspace(0,2*np.pi,N)
-
-        u_approx = fourier_approx(k_lin,x_lin,uk_func(k_lin))
-
-        u_approx = poly_approx(N,x_lin,uk_func(k_lin))
-
-        trunc_err.append(np.max(np.abs((u_func(x_lin)-u_approx))))
-
-    return trunc_err
-
 
 if __name__ == "__main__":
 
@@ -119,13 +89,23 @@ if __name__ == "__main__":
     # Fourier coefficients
     uk_func = lambda k: 1/(np.sqrt(3)*(2+np.sqrt(3))**np.abs(k))
     # Discrete poly coefficients
-    uk_approx_func = lambda k,N: discrete_poly_coefficients(k,N,u_func=u_func)
+    #uk_approx_func = lambda k,N: discrete_poly_coefficients(k,N,u_func=u_func)
+
+    x_lin = np.linspace(-1,1,200)
+
+    trunc_err = []
+
+    for N in N_list:
+
+        xj = JacobiGL(alpha=0, beta=0, N=N-1)
+        u_approx = u_approx_func(x_lin,xj,N,alpha=0,beta=0)
+
+        trunc_err.append(np.max(np.abs((u_func(x_lin)-u_approx))))
 
 
-    #trunc_err = convergence_list(N_list,fourier_approx,u_func,uk_func)
-
+    #trunc_err = convergence_list_poly(N_list,poly_approx,u_func,uk_approx_func)
     plt.figure(2)
-    #plt.semilogy(N_list,trunc_err,"o-",label=r"Numerical: $||u - I_Nu ||^2$")
+    plt.semilogy(N_list,trunc_err,"o-",label=r"Numerical: $||u - I_Nu ||^2$")
     plt.xlabel("N")
     plt.ylabel(r"$||\tau||^2$")
     plt.legend(fontsize=12) 
