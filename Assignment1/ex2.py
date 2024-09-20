@@ -17,7 +17,7 @@ def JacobiP(x,alpha,beta,N):
     elif N==1:
         return J_nm1
 
-    for n in range(2,N+1):
+    for n in range(1,N):
 
         # Computing the recursive coefficients
         anm2  = 2*(n+alpha)*(n+beta)/( (2*n+alpha+beta+1)*(2*n+alpha+beta) )
@@ -33,6 +33,7 @@ def JacobiP(x,alpha,beta,N):
     
     return J_n
 
+
 def Jacobi_visualize(N=6):
 
     x = np.linspace(-1,1,1000)
@@ -44,8 +45,8 @@ def Jacobi_visualize(N=6):
         cheby = JacobiP(x,alpha=-1/2,beta=-1/2,N=n)
         legendre = JacobiP(x,alpha=0,beta=0,N=n)
 
-        ax1.plot(x,cheby,label=f"$P_{n}^{(-1/2,-1/2)}$")
-        ax2.plot(x,legendre,label=f"$P_{n}^{(0,0)}$")
+        ax1.plot(x,cheby,label=r"$P_{n}^{(-1/2,-1/2)}$")
+        ax2.plot(x,legendre,label=r"$P_{n}^{(0,0)}$")
 
         ax1.set_title("Chebyshevs polynomials")
         ax2.set_title("Legendre polynomials")
@@ -133,7 +134,7 @@ if __name__ == "__main__":
     V_inv = np.linalg.inv(V)
     x_lin = np.linspace(-1,1,100)
 
-    plt.figure(3)
+    plt.figure(3,figsize=(8,4))
     for n in range(N):
         
         f_streg = np.zeros(N)
@@ -142,9 +143,11 @@ if __name__ == "__main__":
         f_hat = Vm@V_inv@f_streg
 
         plt.plot(x_lin,f_hat,label=f"$h_{n}$")
-        
-    plt.legend()    
-
+    
+    
+    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    plt.xlabel("x")
+    plt.title("Lagrange Polynomials Obtained by the Vandermonde Matrix")
 
     plt.show()
 
