@@ -60,22 +60,22 @@ def Jacobi_visualize(N=6):
 
         plt.tight_layout()
 
-def u_approx_func(x,xj,N,alpha=0,beta=0):
+def uk_approx_func(x,xj,N,alpha=0,beta=0):
 
-    u_approx = 0
+    uk_approx = np.zeros([len(x)])
 
     for k in np.arange(len(x)): 
-        uk = 0
+        uk_temp = 0
         yk = 0
         for j in range(N):
             wj = (1-xj[j])**alpha+(1+xj[j])**beta
             phi_k = JacobiP(xj[j],alpha=0,beta=0,N=j)
-            uk += (u_func(xj[j]))*phi_k*wj
+            uk_temp += (u_func(xj[j]))*phi_k*wj
             yk += phi_k**2*wj 
 
-        u_approx += uk*JacobiP(x,alpha=0,beta=0,N=k)/yk
+        uk_approx[k] = uk_temp /yk
     
-    return u_approx
+    return uk_approx
 
 if __name__ == "__main__":
 
@@ -95,23 +95,27 @@ if __name__ == "__main__":
 
     x_lin = np.linspace(-1,1,200)
 
-    trunc_err = []
+    uk_approx = np.zeros([len(x_lin),len(N_list)])
 
-    for N in N_list:
+    plt.figure(2)
+
+    for N_idx,N in enumerate(N_list):
 
         xj = JacobiGL(alpha=0, beta=0, N=N-1)
-        u_approx = u_approx_func(x_lin,xj,N,alpha=0,beta=0)
+        uk_approx[:,N_idx] = uk_approx_func(x_lin,xj,N,alpha=0,beta=0)
 
-        trunc_err.append(np.max(np.abs((u_func(x_lin)-u_approx))))
+        plt.plot(x_lin,uk_approx[:,N_idx],label="N")
 
+    plt.legend()
+    plt.show()
 
     #trunc_err = convergence_list_poly(N_list,poly_approx,u_func,uk_approx_func)
-    plt.figure(2)
-    plt.semilogy(N_list,trunc_err,"o-",label=r"Numerical: $||u - I_Nu ||^2$")
-    plt.xlabel("N")
-    plt.ylabel(r"$||\tau||^2$")
-    plt.legend(fontsize=12) 
-    plt.title("Convergence Plot (logarithmic y-axis)")
+    #plt.figure(2)
+    #plt.semilogy(N_list,trunc_err,"o-",label=r"Numerical: $||u - I_Nu ||^2$")
+    #plt.xlabel("N")
+    #plt.ylabel(r"$||\tau||^2$")
+    #plt.legend(fontsize=12) 
+    #plt.title("Convergence Plot (logarithmic y-axis)")
 
     #%% j 
 
