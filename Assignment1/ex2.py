@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from ex1 import check_N,convergence_list,fourier_approx
+from JacobiGL import JacobiGL
 
 def JacobiP(x,alpha,beta,N):
 
@@ -15,9 +16,9 @@ def JacobiP(x,alpha,beta,N):
 
     for n in range(2,N+1):
 
-        # Making the 
+        # Computing the recursive coefficients
         anm2 = 2*(n+alpha)*(n+beta)/( (2*n+alpha+beta+1)*(2*n+alpha+beta) )
-        anm1  = (alpha**2-beta**2)/( (2*n+alpha+beta+1)*(2*n+alpha+beta) )
+        anm1  = (alpha**2-beta**2)/( (2*n+alpha+beta+2)*(2*n+alpha+beta) )
         an = 2*(n+1)*(n+beta+alpha+1)/( (2*n+alpha+beta+2)*(2*n+alpha+beta+1) )
 
         # Computing
@@ -104,14 +105,33 @@ if __name__ == "__main__":
 
     # Construction of Vandermonde matrix:
 
-    N = 6 # given grid points
+    N = 7 # given grid points
 
-    V = np.array(N,N)
+    x_GL = JacobiGL(alpha=0, beta=0, N=6) # Grid points
 
-    for i in range(N):
-        for j in range(N):
-            V[i,j] = JacobiP(x,alpha=0,beta=0,N=N)
+    V = np.zeros([N,N])
+    for j in range(N):
+        V[j,:] = JacobiP(x_GL,alpha=0,beta=0,N=j)
 
+    # Larger Vandemonde matrix
+    Vm = np.zeros([100,N])
+    for j in range(100):
+        Vm[j,:] = JacobiP(x_GL,alpha=0,beta=0,N=j)
+
+    # Visualising lagrange polynomials
+    V_inv = np.linalg.inv(V)
+    x_lin = np.linspace(-1,1,100)
+
+    plt.figure(3)
+    for n in range(N):
+        fs = np.zeros(N)
+        fs[n] = 1
+
+        fm = Vm@V_inv@fs
+
+        plt.plot(x_lin,fm*JacobiP(x_lin,0,0,n),label=f"$h_{n}$")
+        
+    plt.legend()    
 
 
     plt.show()
