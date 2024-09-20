@@ -1,6 +1,7 @@
 import numpy as np 
 import matplotlib.pyplot as plt
 
+
 from ex1 import check_N,convergence_list,fourier_approx
 from JacobiGL import JacobiGL
 
@@ -35,7 +36,7 @@ def JacobiP(x,alpha,beta,N):
 
 
 def Jacobi_visualize(N=6):
-
+    from scipy.special import gamma
     x = np.linspace(-1,1,1000)
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
@@ -45,7 +46,7 @@ def Jacobi_visualize(N=6):
         cheby = JacobiP(x,alpha=-1/2,beta=-1/2,N=n)
         legendre = JacobiP(x,alpha=0,beta=0,N=n)
 
-        ax1.plot(x,cheby,label=r"$P_{n}^{(-1/2,-1/2)}$")
+        ax1.plot(x,gamma(n+1)*gamma(0.5)/gamma(n+0.5) * cheby,label=r"$P_{n}^{(-1/2,-1/2)}$")
         ax2.plot(x,legendre,label=r"$P_{n}^{(0,0)}$")
 
         ax1.set_title("Chebyshevs polynomials")
