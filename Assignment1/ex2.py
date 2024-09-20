@@ -17,9 +17,9 @@ def JacobiP(x,alpha,beta,N):
     for n in range(2,N+1):
 
         # Computing the recursive coefficients
-        anm2 = 2*(n+alpha)*(n+beta)/( (2*n+alpha+beta+1)*(2*n+alpha+beta) )
+        anm2  = 2*(n+alpha)*(n+beta)/( (2*n+alpha+beta+1)*(2*n+alpha+beta) )
         anm1  = (alpha**2-beta**2)/( (2*n+alpha+beta+2)*(2*n+alpha+beta) )
-        an = 2*(n+1)*(n+beta+alpha+1)/( (2*n+alpha+beta+2)*(2*n+alpha+beta+1) )
+        an    = 2*(n+1)*(n+beta+alpha+1)/( (2*n+alpha+beta+2)*(2*n+alpha+beta+1) )
 
         # Computing
         J_n = ( (anm1 + x )*J_nm1 - anm2*J_nm2 ) / an
@@ -48,23 +48,22 @@ def Jacobi_visualize(N=6):
         ax2.set_title("Legendre polynomials")
 
         ax1.set_xlabel("x")
-        ax2.set_ylabel("x")
+        ax2.set_xlabel("x")
 
         ax1.legend()
         ax2.legend()
 
         plt.tight_layout()
 
-def discrete_poly_coefficients(k_lin,alpha=0,beta=0,u_func=lambda x: 1/(2-np.cos(x))):
+def discrete_poly_coefficients(k_lin,N,alpha=0,beta=0,u_func=lambda x: 1/(2-np.cos(x))):
 
-    N = len(k_lin) 
     uk_approx   = np.zeros_like(k_lin,dtype=complex)
         
     for k_idx,k in enumerate(k_lin): 
         s = 0
         yk = 0
-        for j in range(N):
-            xj = 2*np.pi*j/N 
+        for j in N:
+            xj = 2*np.pi*j/N # Ikke rigtige skal ændres !!
             wj = (1-xj)**alpha+(1+xj)**beta
             phi_k = JacobiP(xj,alpha=0,beta=0,N=j)
             s += (u_func(xj))*phi_k*wj
@@ -73,6 +72,37 @@ def discrete_poly_coefficients(k_lin,alpha=0,beta=0,u_func=lambda x: 1/(2-np.cos
         uk_approx[k_idx] = s/yk
 
     return uk_approx
+
+def poly_approx(N,x_lin,uk):
+
+    N_arange = np.arange(N)
+
+    def u_approx_func(x):
+        sum = 0
+        for k in N_arange:
+            sum += uk*JacobiP(x,0,0,k) # Outer sum
+        return sum
+
+    u_approx = np.array([u_approx_func(x) for x in x_lin])
+
+    return u_approx
+
+def convergence_list_poly(N_list,fourier_approx,u_func,uk_func,k_lin=np.arange(200)):
+
+    trunc_err = []
+
+    for N in N_list:
+
+        k_lin = np.arange(200)
+        x_lin = np.linspace(0,2*np.pi,N)
+
+        u_approx = fourier_approx(k_lin,x_lin,uk_func(k_lin))
+
+        u_approx = poly_approx(N,x_lin,uk_func(k_lin))
+
+        trunc_err.append(np.max(np.abs((u_func(x_lin)-u_approx))))
+
+    return trunc_err
 
 
 if __name__ == "__main__":
@@ -89,13 +119,13 @@ if __name__ == "__main__":
     # Fourier coefficients
     uk_func = lambda k: 1/(np.sqrt(3)*(2+np.sqrt(3))**np.abs(k))
     # Discrete poly coefficients
-    uk_approx_func = lambda k: discrete_poly_coefficients(k,u_func=u_func)
+    uk_approx_func = lambda k,N: discrete_poly_coefficients(k,N,u_func=u_func)
 
 
-    trunc_err = convergence_list(N_list,fourier_approx,u_func,uk_func)
+    #trunc_err = convergence_list(N_list,fourier_approx,u_func,uk_func)
 
     plt.figure(2)
-    plt.semilogy(N_list,trunc_err,"o-",label=r"Numerical: $||u - I_Nu ||^2$")
+    #plt.semilogy(N_list,trunc_err,"o-",label=r"Numerical: $||u - I_Nu ||^2$")
     plt.xlabel("N")
     plt.ylabel(r"$||\tau||^2$")
     plt.legend(fontsize=12) 
@@ -111,12 +141,13 @@ if __name__ == "__main__":
 
     V = np.zeros([N,N])
     for j in range(N):
-        V[j,:] = JacobiP(x_GL,alpha=0,beta=0,N=j)
+        V[:,j] = JacobiP(x_GL,alpha=0,beta=0,N=j)
 
     # Larger Vandemonde matrix
     Vm = np.zeros([100,N])
-    for j in range(100):
-        Vm[j,:] = JacobiP(x_GL,alpha=0,beta=0,N=j)
+    xV_lin = np.linspace(-1,1,100)
+    for j in range(N):
+        Vm[:,j] = JacobiP(xV_lin,alpha=0,beta=0,N=j)
 
     # Visualising lagrange polynomials
     V_inv = np.linalg.inv(V)
@@ -124,12 +155,13 @@ if __name__ == "__main__":
 
     plt.figure(3)
     for n in range(N):
-        fs = np.zeros(N)
-        fs[n] = 1
+        
+        f_streg = np.zeros(N)
+        f_streg[n] = 1
 
-        fm = Vm@V_inv@fs
+        f_hat = Vm@V_inv@f_streg
 
-        plt.plot(x_lin,fm*JacobiP(x_lin,0,0,n),label=f"$h_{n}$")
+        plt.plot(x_lin,f_hat,label=f"$h_{n}$")
         
     plt.legend()    
 
