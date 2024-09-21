@@ -79,7 +79,7 @@ def uk_approx_func(u_func,k_list,xj,N,alpha=0,beta=0):
     wj = 2/((N-1)*N) * 1/JacobiP(xj,alpha=0,beta=0,N=N)**2
     for k_idx, k in enumerate(k_list): 
         phi_k = JacobiP(xj,alpha=0,beta=0,N=k)
-        uk_approx[k_idx] = np.sum((u_func(xj))*phi_k*wj) / np.sum(phi_k * phi_k * wj) 
+        uk_approx[k_idx] = np.sum(u_func(xj)*phi_k*wj) / np.sum(phi_k * phi_k * wj) 
         
         # for j in range(N):
         #     wj = (1-xj[j])**alpha*(1+xj[j])**beta
@@ -133,7 +133,7 @@ if __name__ == "__main__":
 
     for N_idx, N in enumerate(N_list):
 
-        xj = JacobiGL(alpha=0, beta=0, N=N-1)
+        xj = JacobiGL(alpha=0, beta=0, N=N)
         uk_approx[:, N_idx] = uk_approx_func(u_func, k_list, xj, N, alpha=0, beta=0)
         
         axs[N_idx].vlines(N_list[N_idx], min(uk_approx[:, N_idx]), max(uk_approx[:, N_idx]), 
@@ -267,14 +267,11 @@ if __name__ == "__main__":
     Vm = get_extended_vandermonde(x,N+1)
     
     plt.figure()
-    plt.plot(x,Vm@V_inv@u_approx,".-",label="Approx")
+    plt.plot(x,Vm@V_inv@u_approx,".-",label=r"$\tilde{V} \ V^{-1} \bar{u}$")
     plt.plot(x,v_func(x),label=r"$\sin(\pi x)$")
     plt.xlabel("x")
     plt.legend()
     plt.title("Extrapolation")
     plt.show()
-    
-
-    
     
 
