@@ -65,7 +65,10 @@ def uk_approx_func(u_func,k_list,xj,N,alpha=0,beta=0):
     K = len(k_list)
     uk_approx = np.zeros(K)
 
-    wj = (1-xj)**alpha*(1+xj)**beta
+    #wj = 2/(2*k_list[:N] + 1)
+    #wj[-1] = 2/k_list[:N][-1]
+    wj = 2/((N-1)*N) * 1/JacobiP(xj,alpha=0,beta=0,N=N)**2
+    #wj = (1-xj)**alpha*(1+xj)**beta
     for k_idx, k in enumerate(k_list): 
         # uk_temp = 0
         #yk = 0
@@ -81,6 +84,8 @@ def uk_approx_func(u_func,k_list,xj,N,alpha=0,beta=0):
         #uk_approx[k_idx] = uk_temp /yk
     
     return uk_approx
+
+    
 
 if __name__ == "__main__":
 
@@ -164,6 +169,29 @@ if __name__ == "__main__":
 
     plt.show()
 
-
+    #%% j approx sin(pi x)
+    
+    v_func = lambda x: np.sin(np.pi * x)
+    
+    N = 40
+    k_list = np.arange(0,N)
+    x_GL = JacobiGL(alpha=0, beta=0, N=N)
+    vk_approx = uk_approx_func(v_func,k_list,x_GL,N,alpha=0,beta=0)
+    
+    u_approx = np.zeros_like(x_GL)
+    for k in k_list:
+        u_approx += vk_approx[k] * JacobiP(x_GL,alpha=0,beta=0,N=k)
+    
+    
+    plt.figure()
+    plt.plot(x_GL,u_approx,".-")
+    plt.plot(x_GL,v_func(x_GL))
+    plt.show()
+    
+    #def poly_approx(k_lin,x_lin,uk,basis_func):
+    
+    
+    
+    
 
 
