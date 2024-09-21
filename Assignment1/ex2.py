@@ -60,18 +60,24 @@ def Jacobi_visualize(N=6):
 
         plt.tight_layout()
 
-def uk_approx_func(u_func,k_list,xj,N,alpha=0,beta=0):
+def discrete_inner_product(u,v,w):    
+    return np.sum(u*v*w)
     
+
+def discrete_L2_norm(u,w):
+    return np.sqrt(discrete_inner_product(u,u,w))
+
+"""
+Nedenstående funktioner virker kun for legendre (alpha=0,beta=0).
+"""
+
+def uk_approx_func(u_func,k_list,xj,N,alpha=0,beta=0):
+    # This function works only for legendre because of the weights
     K = len(k_list)
     uk_approx = np.zeros(K)
 
-    #wj = 2/(2*k_list[:N] + 1)
-    #wj[-1] = 2/k_list[:N][-1]
     wj = 2/((N-1)*N) * 1/JacobiP(xj,alpha=0,beta=0,N=N)**2
-    #wj = (1-xj)**alpha*(1+xj)**beta
     for k_idx, k in enumerate(k_list): 
-        # uk_temp = 0
-        #yk = 0
         phi_k = JacobiP(xj,alpha=0,beta=0,N=k)
         uk_approx[k_idx] = np.sum((u_func(xj))*phi_k*wj) / np.sum(phi_k * phi_k * wj) 
         
@@ -85,7 +91,25 @@ def uk_approx_func(u_func,k_list,xj,N,alpha=0,beta=0):
     
     return uk_approx
 
-    
+def poly_approx(k_lin,x_GL,uk):
+    u_approx = np.zeros_like(x_GL)
+    for k in k_list:
+        u_approx += uk[k] * JacobiP(x_GL,alpha=0,beta=0,N=k)
+    return u_approx
+
+def get_vandermonde(x_GL):
+    N = len(x_GL)
+    V = np.zeros([N,N])
+    for j in range(N):
+        V[:,j] = JacobiP(x_GL,alpha=0,beta=0,N=j)
+    return V
+
+def get_extended_vandermonde(x,N):
+    K = len(x)
+    Vm = np.zeros([K,N])
+    for j in range(N):
+        Vm[:,j] = JacobiP(x,alpha=0,beta=0,N=j)
+    return Vm
 
 if __name__ == "__main__":
 
@@ -108,6 +132,7 @@ if __name__ == "__main__":
     fig, axs = plt.subplots(len(N_list), 1, figsize=(7, len(N_list)*2), constrained_layout=True)
 
     for N_idx, N in enumerate(N_list):
+
         xj = JacobiGL(alpha=0, beta=0, N=N-1)
         uk_approx[:, N_idx] = uk_approx_func(u_func, k_list, xj, N, alpha=0, beta=0)
         
@@ -172,26 +197,84 @@ if __name__ == "__main__":
     #%% j approx sin(pi x)
     
     v_func = lambda x: np.sin(np.pi * x)
+    N_points = 40
     
-    N = 40
+    N = N_points - 1
     k_list = np.arange(0,N)
     x_GL = JacobiGL(alpha=0, beta=0, N=N)
     vk_approx = uk_approx_func(v_func,k_list,x_GL,N,alpha=0,beta=0)
     
-    u_approx = np.zeros_like(x_GL)
-    for k in k_list:
-        u_approx += vk_approx[k] * JacobiP(x_GL,alpha=0,beta=0,N=k)
+    u_approx = poly_approx(k_list,x_GL,vk_approx)
     
     
     plt.figure()
-    plt.plot(x_GL,u_approx,".-")
-    plt.plot(x_GL,v_func(x_GL))
+    x = np.linspace(-1,1,1000)
+    plt.plot(x_GL,u_approx,".-",label="Approx")
+    plt.plot(x,v_func(x),label=r"$\sin(\pi x)$")
+    plt.xlabel("x")
+    plt.legend()
     plt.show()
     
-    #def poly_approx(k_lin,x_lin,uk,basis_func):
+    # Convergence plot
+    N_list = np.arange(2,50,2)
+    err = np.zeros_like(N_list,dtype=float)
+    for N_idx,N in enumerate(N_list):
+        
+        # Compute approximation
+        k_list = np.arange(0,N)
+        x_GL = JacobiGL(alpha=0, beta=0, N=N)
+        vk_approx = uk_approx_func(v_func,k_list,x_GL,N,alpha=0,beta=0)
+        u_approx = poly_approx(k_list,x_GL,vk_approx)
+        
+        # Setup Vandermonde matrices
+        V = get_vandermonde(x_GL)
+        V_inv = np.linalg.inv(V)
+        x = np.linspace(-1,1,100)
+        Vm = get_extended_vandermonde(x,N+1)
+        
+        # Compute true values
+        u_true = v_func(x)
+        u_true_on_GL = v_func(x_GL)
+        
+        
+        # compute discrete L2 - error 
+        err[N_idx] = np.max(np.abs(u_true-Vm@V_inv@u_approx))
+        #err[N_idx] = np.max(np.abs(u_true_on_GL-u_approx))
     
+    plt.figure()
+    plt.semilogy(N_list,err,".-",label=r"$\max_x | \sin(\pi x) - \tilde{V} \ V^{-1} \bar{u}|$")
+    plt.xlabel("N")
+    plt.ylabel("error")
+    plt.legend()
+    plt.show()
     
+    #%% j Extrapolation
     
+    v_func = lambda x: np.sin(np.pi * x)
+    N_points = 40
+    
+    N = N_points - 1
+    k_list = np.arange(0,N)
+    x_GL = JacobiGL(alpha=0, beta=0, N=N)
+    vk_approx = uk_approx_func(v_func,k_list,x_GL,N,alpha=0,beta=0)
+    
+    u_approx = poly_approx(k_list,x_GL,vk_approx)
+    
+    # Setup Vandermonde matrices on larger domain
+    V = get_vandermonde(x_GL)
+    V_inv = np.linalg.inv(V)
+    x = np.linspace(-1.4,1.4,100)
+    Vm = get_extended_vandermonde(x,N+1)
+    
+    plt.figure()
+    plt.plot(x,Vm@V_inv@u_approx,".-",label="Approx")
+    plt.plot(x,v_func(x),label=r"$\sin(\pi x)$")
+    plt.xlabel("x")
+    plt.legend()
+    plt.title("Extrapolation")
+    plt.show()
     
 
+    
+    
 
