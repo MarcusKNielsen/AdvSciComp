@@ -46,8 +46,8 @@ def Jacobi_visualize(N=6):
         cheby = JacobiP(x,alpha=-1/2,beta=-1/2,N=n)
         legendre = JacobiP(x,alpha=0,beta=0,N=n)
 
-        ax1.plot(x,gamma(n+1)*gamma(0.5)/gamma(n+0.5) * cheby,label=r"$P_{n}^{(-1/2,-1/2)}$")
-        ax2.plot(x,legendre,label=r"$P_{n}^{(0,0)}$")
+        ax1.plot(x,gamma(n+1)*gamma(0.5)/gamma(n+0.5) * cheby,label=rf"$T_{{{n}}}^{{(-1/2,-1/2)}}$")
+        ax2.plot(x,legendre,label=rf"$P_{{{n}}}^{{(0,0)}}$")
 
         ax1.set_title("Chebyshevs polynomials")
         ax2.set_title("Legendre polynomials")
@@ -60,26 +60,30 @@ def Jacobi_visualize(N=6):
 
         plt.tight_layout()
 
-def uk_approx_func(x,xj,N,alpha=0,beta=0):
+def uk_approx_func(u_func,k_list,xj,N,alpha=0,beta=0):
+    
+    K = len(k_list)
+    uk_approx = np.zeros(K)
 
-    uk_approx = np.zeros([len(x)])
+    wj = (1-xj)**alpha*(1+xj)**beta
+    for k_idx, k in enumerate(k_list): 
+        # uk_temp = 0
+        #yk = 0
+        phi_k = JacobiP(xj,alpha=0,beta=0,N=k)
+        uk_approx[k_idx] = np.sum((u_func(xj))*phi_k*wj) / np.sum(phi_k * phi_k * wj) 
+        
+        # for j in range(N):
+        #     wj = (1-xj[j])**alpha*(1+xj[j])**beta
+        #     phi_k = JacobiP(xj[j],alpha=0,beta=0,N=k)
+        #     uk_temp += (u_func(xj[j]))*phi_k*wj
+        #     yk += phi_k**2*wj 
 
-    for k in np.arange(len(x)): 
-        uk_temp = 0
-        yk = 0
-        for j in range(N):
-            wj = (1-xj[j])**alpha+(1+xj[j])**beta
-            phi_k = JacobiP(xj[j],alpha=0,beta=0,N=j)
-            uk_temp += (u_func(xj[j]))*phi_k*wj
-            yk += phi_k**2*wj 
-
-        uk_approx[k] = uk_temp /yk
+        #uk_approx[k_idx] = uk_temp /yk
     
     return uk_approx
 
 if __name__ == "__main__":
 
-    #%% h : (OBS: Der er lidt galt, fordi de matcher ikke helt med dem på slides, tror der er noget scale som er problemet)
     Jacobi_visualize()
 
 
@@ -87,28 +91,32 @@ if __name__ == "__main__":
     # List of N used in convergence plot
     N_list = np.array([10,40,80,100,200])
     # Analytical function 
-    u_func = lambda x: 1/(2-np.cos(x)) # Remove pi, to let x = [0:2pi]
-    # Fourier coefficients
-    uk_func = lambda k: 1/(np.sqrt(3)*(2+np.sqrt(3))**np.abs(k))
+    u_func = lambda x: 1/(2-np.cos(np.pi*(x+1))) # Remove pi, to let x = [-1:1]
     # Discrete poly coefficients
     #uk_approx_func = lambda k,N: discrete_poly_coefficients(k,N,u_func=u_func)
 
-    x_lin = np.linspace(-1,1,200)
+    #x_lin = np.linspace(-1,1,200)
+    k_list = np.arange(0,200)
 
-    uk_approx = np.zeros([len(x_lin),len(N_list)])
+    uk_approx = np.zeros([len(k_list),len(N_list)])
 
-    plt.figure(2)
+    fig, axs = plt.subplots(len(N_list), 1, figsize=(7, len(N_list)*2), constrained_layout=True)
 
-    for N_idx,N in enumerate(N_list):
-
+    for N_idx, N in enumerate(N_list):
         xj = JacobiGL(alpha=0, beta=0, N=N-1)
-        uk_approx[:,N_idx] = uk_approx_func(x_lin,xj,N,alpha=0,beta=0)
-
-        plt.plot(x_lin,uk_approx[:,N_idx],label="N")
-
-    plt.legend()
+        uk_approx[:, N_idx] = uk_approx_func(u_func, k_list, xj, N, alpha=0, beta=0)
+        
+        axs[N_idx].vlines(N_list[N_idx], min(uk_approx[:, N_idx]), max(uk_approx[:, N_idx]), 
+                          linestyle="--", color="red", label=f"N = {N_list[N_idx]}")
+        axs[N_idx].plot(k_list, uk_approx[:, N_idx], ".-", label=r"$u_k$")
+        
+        
+        axs[N_idx].set_title(f"Plot for N = {N}")
+        axs[N_idx].legend()
+    
+    # Set a shared x-label for all subplots
+    plt.xlabel('k_list')
     plt.show()
-
     #trunc_err = convergence_list_poly(N_list,poly_approx,u_func,uk_approx_func)
     #plt.figure(2)
     #plt.semilogy(N_list,trunc_err,"o-",label=r"Numerical: $||u - I_Nu ||^2$")
