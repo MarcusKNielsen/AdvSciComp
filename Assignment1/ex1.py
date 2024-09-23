@@ -161,12 +161,12 @@ if __name__ == "__main__":
     uk_exact2 = uk_func(k_lin2)
 
     # Create a 2x2 grid for the subplots
-    fig, axs = plt.subplots(2, 2, figsize=(10, 8))
+    fig, axs = plt.subplots(2, 2, figsize=(10, 8)) 
 
-    # First subplot (N = 4, comparison of Fourier coefficients)
+    # First subplot (N = 4, comparison of Fourier coefficients) 
     axs[0, 0].plot(k_lin1, np.abs(uk_approx1 - uk_exact1), "o-")
     axs[0, 0].set_xlabel("k", fontsize=fontsize)
-    axs[0, 0].set_ylabel(r"$|\tilde{u}_k - \hat{u}_k|$", fontsize=fontsize)
+    axs[0, 0].set_ylabel(r"$|\tilde{u}_k - \hat{u}_k|$", fontsize=fontsize) 
     axs[0, 0].set_title(r"Error with $N=4$", fontsize=fontsize)
 
     # Second subplot (N = 4, comparison of approx and exact)
@@ -175,12 +175,12 @@ if __name__ == "__main__":
     axs[0, 1].set_xlabel("k", fontsize=fontsize)
     axs[0, 1].set_ylabel(r"$u_k$", fontsize=fontsize)
     axs[0, 1].legend(fontsize=fontsize)
-    axs[0, 1].set_title(r"Approx vs Exact with $N=4$", fontsize=fontsize)
+    axs[0, 1].set_title(r"Approx vs Exact with $N=4$", fontsize=fontsize) 
 
     # Third subplot (N = 10, comparison of Fourier coefficients)
     axs[1, 0].plot(k_lin2, np.abs(uk_approx2 - uk_exact2), "o-")
     axs[1, 0].set_xlabel("k", fontsize=fontsize)
-    axs[1, 0].set_ylabel(r"$|\tilde{u}_k - \hat{u}_k|$", fontsize=fontsize)
+    axs[1, 0].set_ylabel(r"$|\tilde{u}_k - \hat{u}_k|$", fontsize=fontsize) 
     axs[1, 0].set_title(r"Error with $N=10$", fontsize=fontsize)
 
     # Fourth subplot (N = 10, comparison of approx and exact)
@@ -189,7 +189,7 @@ if __name__ == "__main__":
     axs[1, 1].set_xlabel("k", fontsize=fontsize)
     axs[1, 1].set_ylabel(r"$u_k$", fontsize=fontsize)
     axs[1, 1].legend(fontsize=fontsize)
-    axs[1, 1].set_title(r"Approx vs Exact with $N=10$", fontsize=fontsize)
+    axs[1, 1].set_title(r"Approx vs Exact with $N=10$", fontsize=fontsize) 
 
     # Adjust layout to avoid overlap
     plt.tight_layout()
@@ -215,7 +215,7 @@ if __name__ == "__main__":
         err[i] = np.max(np.abs(uk_approx-uk_exact))
         
 
-    plt.figure(2)
+    plt.figure(3)
     plt.plot(N_list,np.log(err),"o-",label=r"$\max_k \ |\tilde{u}_k - \hat{u}_k|$")
     plt.xlabel("N")
     plt.ylabel(r"Error")
@@ -231,7 +231,7 @@ if __name__ == "__main__":
     #k_lin = check_N(N)
     
     # Convergence plot
-    plt.figure(3)
+    plt.figure(4)
     plt.semilogy(N_convergence_list,trunc_err,"o-",label=r"Numerical: $||u - P_Nu ||^2$")
     #plt.semilogy(N_convergence_list[:-17],norm_2_tau(N_convergence_list[:-17]),label=r"Analytical: $||\tau||^2 \sim e^{- \alpha \frac{N}{2}}$")
     plt.xlabel("N")
@@ -250,7 +250,7 @@ if __name__ == "__main__":
         match = match_uk(uk_func(k_lin_temp),uk_approx[Ni])      # Matching the discrete FT with the analytical
 
     # Plotting the analytical uk vs the approximated
-    plt.figure(4)
+    plt.figure(5)
     plt.plot(k_lin_temp,uk_approx[Ni],"o-",label=f"N={Ni}")
     plt.plot(k_lin_temp,uk_func(k_lin_temp),"o-",label="uk analytical")
     plt.xlabel("k")
@@ -265,7 +265,7 @@ if __name__ == "__main__":
     u_approx_discrete = fourier_approx(k_lin_temp,x_lin,uk_approx_func(k_lin_temp))
 
     # Plotting the approximated function values
-    plt.figure(5)
+    plt.figure(6)
     plt.plot(x_lin,u_approx_analytical.real,label="u analytical")
     plt.plot(x_lin,u_approx_discrete.real,label="u discrete")
     plt.legend()
@@ -273,10 +273,10 @@ if __name__ == "__main__":
     # Comparison of convergence using analytical and discrete
     trunc_err_approx = convergence_list(N_convergence_list,fourier_approx,u_func,uk_approx_func)
 
-    plt.figure(6)
-    plt.semilogy(N_convergence_list,trunc_err,"o-",label=r"Numerical: $||u - P_Nu ||^2$")
-    plt.semilogy(N_convergence_list,trunc_err_approx,"o-",label="Discrete")
-    plt.semilogy(N_list[:-17],(2-np.sqrt(3))**(N_list[:-17]/2),label=r"Analytical: $||\tau||^2 \sim e^{- \alpha \frac{N}{2}}$")
+    plt.figure(7)
+    plt.semilogy(N_convergence_list,trunc_err,"o-",label=r"$||u - P_Nu ||_{\infty}$")
+    plt.semilogy(N_convergence_list,trunc_err_approx,"o-",label="$||u - I_Nu||_{\infty}$")
+    plt.semilogy(N_list[:-17],(2-np.sqrt(3))**(N_list[:-17]/2),label=r"$||\tau||^2 \sim e^{- \alpha \frac{N}{2}}$")
     plt.xlabel("N")
     plt.ylabel(r"$||\tau||^2$")
     plt.legend()
@@ -293,7 +293,7 @@ if __name__ == "__main__":
     x_lin = np.linspace(0,2*np.pi,100) 
 
     # Visualizing the lagrange polynomials
-    plt.figure(7)
+    plt.figure(8)
 
     for j_idx in range(N):
         
@@ -312,7 +312,7 @@ if __name__ == "__main__":
 
     D,Dh = D_matrix(N,xj,j_lin)
 
-    plt.figure(8)
+    plt.figure(9)
     plt.plot(x_lin,Dh(xj[2],x_lin,N),label="dh/dx")
     plt.plot(x_lin,10*lagrange_interpolation(xj[2],x_lin,N),label="h")
     plt.legend()
@@ -320,7 +320,7 @@ if __name__ == "__main__":
     Dv_approx = D@v(xj)
     Dv_exact = diff_v(xj)    
 
-    plt.figure(9)
+    plt.figure(10)
     plt.plot(xj,Dv_exact,label="exact")
     plt.plot(xj,Dv_approx,label="approx")
     plt.grid()
@@ -328,7 +328,7 @@ if __name__ == "__main__":
 
     # Plot 10
     Dv_exact = diff_v(x_lin)   
-    plt.figure(10)
+    plt.figure(11)
     plt.plot(x_lin,Dv_exact,label="v'(x)")
 
 
@@ -354,7 +354,7 @@ if __name__ == "__main__":
         plt.legend()
         plt.grid()
         
-    plt.figure(11)
+    plt.figure(12)
     plt.semilogy(N_convergence_list,err)
     plt.xlabel("N")
     plt.ylabel("||v'(x)-Dv||")
@@ -374,7 +374,7 @@ if __name__ == "__main__":
     Dv_approx = D@v(xj)
     Dv_exact = diff_v(x_lin)  
 
-    plt.figure(12)
+    plt.figure(13)
     plt.plot(x_lin,Dv_exact,label="exact")
     plt.plot(xj,Dv_approx,'-',label="approx")
     plt.plot(xj,dvdx,'--',label="FFT")
@@ -419,7 +419,7 @@ if __name__ == "__main__":
         err_FFT.append(np.max(np.abs(dvdx-Dv_exact)))
 
 
-    plt.figure(13)
+    plt.figure(14)
     plt.semilogy(N_convergence_list,err,"o-",label="Mat convergence")
     plt.semilogy(N_convergence_list,err_FFT,"o-",label="FFT convergence")
     plt.xlabel("N")
@@ -428,7 +428,7 @@ if __name__ == "__main__":
     plt.grid()
 
     # Performance study plot
-    plt.figure(14)
+    plt.figure(15)
     plt.semilogy(N_convergence_list,times_FFT,"o-",label="Times of FFT")
     plt.semilogy(N_convergence_list,times_Mat,"o-",label="Times of Mat")
     plt.xlabel("N")
