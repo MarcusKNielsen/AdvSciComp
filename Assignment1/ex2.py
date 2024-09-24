@@ -5,6 +5,22 @@ import matplotlib.pyplot as plt
 from ex1 import check_N,convergence_list,fourier_approx
 from JacobiGL import JacobiGL
 
+def w0(x):
+    x = x/(2*np.pi)
+    return (x < 0)*(-np.cos(x)) + (x >= 0)*np.cos(x)
+
+def w1(x):
+    x = x/(2*np.pi)
+    return np.sin(np.maximum(x,0)) - np.sin(np.minimum(x,0))
+
+def w2(x):
+    x = x/(2*np.pi)
+    return -np.cos(np.maximum(x,0)) + np.cos(np.minimum(x,0))
+
+def w3(x):
+    x = x/(2*np.pi)
+    return - np.sin(np.abs(x)) + np.abs(x) - 2*np.pi
+
 def JacobiP(x,alpha,beta,N):
 
     if x.size > 1:
@@ -34,6 +50,12 @@ def JacobiP(x,alpha,beta,N):
     
     return J_n
 
+def GradJacobiP(x,alpha,beta,N):
+
+    if N == 0:
+        return 0
+
+    return 1/2*(alpha+beta+N+1)*JacobiP(x,alpha+1,beta+1,N-1)
 
 def Jacobi_visualize(N=6):
     from scipy.special import gamma
@@ -67,6 +89,7 @@ def discrete_inner_product(u,v,w):
 def discrete_L2_norm(u,w):
     return np.sqrt(discrete_inner_product(u,u,w))
 
+
 """
 Nedenstående funktioner virker kun for legendre (alpha=0,beta=0).
 """
@@ -80,14 +103,6 @@ def uk_approx_func(u_func,k_list,xj,N,alpha=0,beta=0):
     for k_idx, k in enumerate(k_list): 
         phi_k = JacobiP(xj,alpha=0,beta=0,N=k)
         uk_approx[k_idx] = np.sum(u_func(xj)*phi_k*wj) / np.sum(phi_k * phi_k * wj) 
-        
-        # for j in range(N):
-        #     wj = (1-xj[j])**alpha*(1+xj[j])**beta
-        #     phi_k = JacobiP(xj[j],alpha=0,beta=0,N=k)
-        #     uk_temp += (u_func(xj[j]))*phi_k*wj
-        #     yk += phi_k**2*wj 
-
-        #uk_approx[k_idx] = uk_temp /yk
     
     return uk_approx
 
@@ -103,6 +118,19 @@ def get_vandermonde(x_GL):
     for j in range(N):
         V[:,j] = JacobiP(x_GL,alpha=0,beta=0,N=j)
     return V
+
+def get_vandermonde_x(x_GL):
+    N = len(x_GL)
+    V = np.zeros([N,N])
+    for j in range(N):
+        V[:,j] = GradJacobiP(x_GL,alpha=0,beta=0,N=j)
+    return V
+
+def D_poly(x_GL):
+    Vx = get_vandermonde_x(x_GL)
+    V = get_vandermonde(x_GL)
+
+    return Vx@np.linalg.inv(V)
 
 def get_extended_vandermonde(x,N):
     K = len(x)
@@ -146,7 +174,7 @@ if __name__ == "__main__":
     
     # Set a shared x-label for all subplots
     plt.xlabel('k_list')
-    plt.show()
+    #plt.show()
     #trunc_err = convergence_list_poly(N_list,poly_approx,u_func,uk_approx_func)
     #plt.figure(2)
     #plt.semilogy(N_list,trunc_err,"o-",label=r"Numerical: $||u - I_Nu ||^2$")
@@ -192,7 +220,7 @@ if __name__ == "__main__":
     plt.xlabel("x")
     plt.title("Lagrange Polynomials Obtained by the Vandermonde Matrix")
 
-    plt.show()
+    ##plt.show(()
 
     #%% j approx sin(pi x)
     
@@ -213,7 +241,7 @@ if __name__ == "__main__":
     plt.plot(x,v_func(x),label=r"$\sin(\pi x)$")
     plt.xlabel("x")
     plt.legend()
-    plt.show()
+    #plt.show(()
     
     # Convergence plot
     N_list = np.arange(2,50,2)
@@ -246,7 +274,7 @@ if __name__ == "__main__":
     plt.xlabel("N")
     plt.ylabel("error")
     plt.legend()
-    plt.show()
+    #plt.show(()
     
     #%% j Extrapolation
     
@@ -272,6 +300,25 @@ if __name__ == "__main__":
     plt.xlabel("x")
     plt.legend()
     plt.title("Extrapolation")
-    plt.show()
+    ##plt.show(()
+
+    norm_error = []
+    for Ni in np.array([10,20,60,100,200]):
+
+        x_GL = JacobiGL(alpha=0,beta=0,N=Ni)
+        # w'(x)-Dw(x)
+        expression = w2(x_GL)-D_poly(x_GL)*w3(x_GL)
+        weights    = 2/((Ni-1)*Ni)* 1/(JacobiP(x_GL,alpha=0,beta=0,N=Ni)**2)
+        norm_error.append(discrete_L2_norm(expression,weights))
     
+    
+    plt.figure()
+    plt.semilogy(np.array([10,20,60,100,200]), norm_error)
+    plt.xlabel("N")
+    plt.ylabel("$||w'-Dw||_N^2$")
+    plt.show()
+
+
+
+
 
