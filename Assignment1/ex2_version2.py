@@ -3,6 +3,7 @@
 import numpy as np 
 from scipy.special import gamma
 import matplotlib.pyplot as plt
+import math
 
 
 from ex1 import check_N,convergence_list,fourier_approx
@@ -10,7 +11,7 @@ from JacobiGL import JacobiGL
 
 def JacobiP(x,alpha,beta,N):
 
-    gammak = np.sqrt(2**(alpha+beta+1)*gamma(N+alpha+1)*gamma(N+beta+1)/(gamma(N+1)*(2*N+alpha+beta+1)*gamma(N+alpha+beta+1)))
+    gammak = 2**(alpha+beta+1)*gamma(N+alpha+1)*gamma(N+beta+1)/(math.factorial(N)*(2*N+alpha+beta+1)*gamma(N+alpha+beta+1))
 
 
     if x.size > 1:
@@ -21,9 +22,9 @@ def JacobiP(x,alpha,beta,N):
     J_nm1 = 1/2*(alpha-beta+(alpha+beta+2)*x) # J_{n-1}
 
     if N==0:
-        return J_nm2/gammak
+        return J_nm2/np.sqrt(gammak)
     elif N==1:
-        return J_nm1/gammak
+        return J_nm1/np.sqrt(gammak)
 
     for n in range(1,N):
 
@@ -39,7 +40,7 @@ def JacobiP(x,alpha,beta,N):
         J_nm2 = J_nm1
         J_nm1 = J_n
 
-    return J_n/gammak
+    return J_n/np.sqrt(gammak)
 
 
 def GradJacobiP(x,alpha,beta,N):
@@ -94,7 +95,7 @@ def uk_approx_func(u_func,k_list,xj,N,alpha=0,beta=0):
     wj = 2/((N-1)*N) * 1/JacobiP(xj,alpha=0,beta=0,N=N-1)**2
     for k_idx, k in enumerate(k_list): 
         phi_k = JacobiP(xj,alpha=0,beta=0,N=k)
-        uk_approx[k_idx] = np.sum(u_func(xj)*phi_k*wj) / np.sum(phi_k * phi_k * wj) 
+        uk_approx[k_idx] = np.sum(u_func(xj)*phi_k*wj)
     
     return uk_approx
 
@@ -113,14 +114,14 @@ def poly_approx(k_lin,x_GL,uk):
         u_approx += uk[k] * JacobiP(x_GL,alpha=0,beta=0,N=k)
     return u_approx
 
-def get_vandermonde_old(x_GL):
+def get_vandermonde(x_GL):
     N = len(x_GL)
     V = np.zeros([N,N])
     for j in range(N):
         V[:,j] = JacobiP(x_GL,alpha=0,beta=0,N=j)
     return V
 
-def get_vandermonde(x_GL):
+def get_vandermonde_norm(x_GL):
         N = len(x_GL)
         V = np.zeros([N,N])
         weights = 2/((N-1)*N)* 1/(JacobiP(x_GL,alpha=0,beta=0,N=N-1)**2)
@@ -145,10 +146,8 @@ def D_poly(x_GL):
 def get_extended_vandermonde(x,N):
     K = len(x)
     Vm = np.zeros([K,N])
-    weights = 2/((N-1)*N)* 1/(JacobiP(x,alpha=0,beta=0,N=N-1)**2)
     for j in range(N):
-        phi = JacobiP(x,alpha=0,beta=0,N=j)
-        Vm[:,j] = phi/discrete_L2_norm(phi,weights)
+        Vm[:,j] = JacobiP(x,alpha=0,beta=0,N=j)
     return Vm
 
 if __name__ == "__main__":
@@ -242,7 +241,7 @@ if __name__ == "__main__":
     k_list = np.arange(0,N_points)
     x_GL = JacobiGL(alpha=0, beta=0, N=N_points-1)
     vk_approx = uk_approx_func(v_func,k_list,x_GL,N_points,alpha=0,beta=0)
-    V = get_vandermonde_old(x_GL)
+    V = get_vandermonde(x_GL)
     
     u_approx = V@vk_approx #poly_approx(k_list,x_GL,vk_approx)
     
@@ -294,7 +293,6 @@ if __name__ == "__main__":
     #%% j Extrapolation
     
     v_func = lambda x: np.sin(np.pi * x)
-    dv_func = lambda x: np.pi*np.cos(np.pi*x)
     N_points = 40
     
     N = N_points - 1
@@ -319,6 +317,9 @@ if __name__ == "__main__":
     ##plt.show(()
 
     # k) Derivative using Vandermonde
+    v_func = lambda x: np.exp(np.sin(np.pi * x))
+    dv_func = lambda x: np.pi*np.cos(np.pi*x)*np.exp(np.sin(x*np.pi))
+    
     norm_error = []
     norm_error_V = []
     N_list = np.arange(4,100,4)
@@ -368,6 +369,3 @@ if __name__ == "__main__":
 
 
 
-
-
-# %%

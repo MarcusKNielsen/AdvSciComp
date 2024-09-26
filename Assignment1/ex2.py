@@ -1,25 +1,9 @@
 import numpy as np 
 import matplotlib.pyplot as plt
-
+from scipy.special import gamma
 
 from ex1 import check_N,convergence_list,fourier_approx
 from JacobiGL import JacobiGL
-
-def w0(x):
-    x = x/(2*np.pi)
-    return (x < 0)*(-np.cos(x)) + (x >= 0)*np.cos(x)
-
-def w1(x):
-    x = x/(2*np.pi)
-    return np.sin(np.maximum(x,0)) - np.sin(np.minimum(x,0))
-
-def w2(x):
-    x = x/(2*np.pi)
-    return -np.cos(np.maximum(x,0)) + np.cos(np.minimum(x,0))
-
-def w3(x):
-    x = x/(2*np.pi)
-    return - np.sin(np.abs(x)) + np.abs(x) - 2*np.pi
 
 def JacobiP(x,alpha,beta,N):
 
@@ -49,6 +33,41 @@ def JacobiP(x,alpha,beta,N):
         J_nm1 = J_n
     
     return J_n
+
+
+def JacobiP2(x,alpha,beta,N):
+
+    gammak = np.sqrt(2**(alpha+beta+1)*gamma(N+alpha+1)*gamma(N+beta+1)/(gamma(N+1)*(2*N+alpha+beta+1)*gamma(N+alpha+beta+1)))
+
+
+    if x.size > 1:
+        J_nm2 = np.ones(len(x)) # J_{n-2}
+    else:
+        J_nm2 = 1
+
+    J_nm1 = 1/2*(alpha-beta+(alpha+beta+2)*x) # J_{n-1}
+
+    if N==0:
+        return J_nm2/gammak
+    elif N==1:
+        return J_nm1/gammak
+
+    for n in range(1,N):
+
+        # Computing the recursive coefficients
+        anm2  = 2*(n+alpha)*(n+beta)/( (2*n+alpha+beta+1)*(2*n+alpha+beta) )
+        anm1  = (alpha**2-beta**2)/( (2*n+alpha+beta+2)*(2*n+alpha+beta) )
+        an    = 2*(n+1)*(n+beta+alpha+1)/( (2*n+alpha+beta+2)*(2*n+alpha+beta+1) )
+
+        # Computing
+        J_n = ( (anm1 + x )*J_nm1 - anm2*J_nm2 ) / an
+
+        # Updating step
+        J_nm2 = J_nm1
+        J_nm1 = J_n
+
+    return J_n/gammak
+
 
 def GradJacobiP(x,alpha,beta,N):
 
@@ -118,6 +137,15 @@ def get_vandermonde(x_GL):
     for j in range(N):
         V[:,j] = JacobiP(x_GL,alpha=0,beta=0,N=j)
     return V
+
+def get_vandermonde_norm(x_GL):
+        N = len(x_GL)
+        V = np.zeros([N,N])
+        weights = 2/((N-1)*N)* 1/(JacobiP(x_GL,alpha=0,beta=0,N=N-1)**2)
+        for j in range(N):
+            phi = JacobiP(x_GL,alpha=0,beta=0,N=j)
+            V[:,j] = phi/discrete_L2_norm(phi,weights)
+        return V
 
 def get_vandermonde_x(x_GL):
     N = len(x_GL)
@@ -279,6 +307,7 @@ if __name__ == "__main__":
     #%% j Extrapolation
     
     v_func = lambda x: np.sin(np.pi * x)
+    #dv_func = lambda x: np.pi*np.cos(np.pi*x)
     N_points = 40
     
     N = N_points - 1
@@ -302,23 +331,54 @@ if __name__ == "__main__":
     plt.title("Extrapolation")
     ##plt.show(()
 
+    # k) Derivative using Vandermonde
+    v_func = lambda x: np.exp(np.sin(np.pi * x))
+    dv_func = lambda x: np.pi*np.cos(np.pi*x)*np.exp(np.sin(x*np.pi))
+
     norm_error = []
-    for Ni in np.array([10,20,60,100,200]):
+    norm_error_V = []
+    N_list = np.arange(4,100,4)
+    for Ni in N_list:
 
         x_GL = JacobiGL(alpha=0,beta=0,N=Ni)
-        # w'(x)-Dw(x)
-        expression = w2(x_GL)-D_poly(x_GL)*w3(x_GL)
-        weights    = 2/((Ni-1)*Ni)* 1/(JacobiP(x_GL,alpha=0,beta=0,N=Ni)**2)
+        V = get_vandermonde(x_GL)
+        # v'(x)-Dv(x)
+        expression = dv_func(x_GL)-D_poly(x_GL)@v_func(x_GL)
+        weights    = 2/(Ni*(Ni+1))* 1/(JacobiP(x_GL,alpha=0,beta=0,N=Ni)**2)
         norm_error.append(discrete_L2_norm(expression,weights))
-    
-    
+        norm_error_V.append(expression.T@np.linalg.inv((V@V.T))@expression)
+       
     plt.figure()
-    plt.semilogy(np.array([10,20,60,100,200]), norm_error)
+    plt.semilogy(N_list, norm_error,label="Normal")
+    plt.semilogy(N_list,norm_error_V,label="V")
     plt.xlabel("N")
-    plt.ylabel("$||w'-Dw||_N^2$")
-    plt.show()
+    plt.ylabel("$||v'-Dv||_N^2$")
+    plt.legend()
+
+    plt.figure()
+    plt.plot(x_GL,dv_func(x_GL),label="exact")
+    plt.plot(x_GL,D_poly(x_GL)@v_func(x_GL), label="Approx")
+    plt.legend()
+
+    #%% l) 
+
+    N = 100
+    x_GL = JacobiGL(alpha=0,beta=0,N=N)
+    V = get_vandermonde_norm(x_GL)
+    M = np.linalg.inv(V@V.T)
+    weights = 2/(N*(N+1))* 1/(JacobiP(x_GL,alpha=0,beta=0,N=N)**2)
+    
+    u1_func = lambda x: np.sin(x+1)
+    u2_func = lambda x: np.ones(len(x))
+    u_int1 = u1_func(x_GL).T@M@u1_func(x_GL)
+    u_int2 = u2_func(x_GL).T@M@u2_func(x_GL)
+
+    print(u_int1)
+    print(u_int2)
+    print(discrete_inner_product(u1_func(x_GL),u1_func(x_GL),weights))
+    print(discrete_inner_product(u2_func(x_GL),u2_func(x_GL),weights))
 
 
 
-
+plt.show()
 
