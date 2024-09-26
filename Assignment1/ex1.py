@@ -25,7 +25,7 @@ def convergence_list(N_list,fourier_approx,u_func,uk_func):
 
         u_approx = fourier_approx(k_lin,x_lin,uk_func(k_lin))
 
-        trunc_err.append(np.max(np.abs((u_func(x_lin)-u_approx))))
+        trunc_err.append(np.max(np.abs(u_func(x_lin)-u_approx)))
 
     return trunc_err
 
@@ -131,9 +131,7 @@ if __name__ == "__main__":
     plt.semilogy(N_list,trunc_err,"o-",label=r"Numerical: $||u - P_Nu ||^2$")
     plt.semilogy(N_list[:-17],(2-np.sqrt(3))**(N_list[:-17]/2),label=r"Analytical: $||\tau||^2 \sim e^{- \alpha \frac{N}{2}}$")
     plt.xlabel("N")
-    plt.ylabel(r"$||\tau||^2$")
     plt.legend(fontsize=12) 
-    plt.title("Convergence Plot (logarithmic y-axis)")
     #plt.show()
 
     #%%
@@ -170,8 +168,8 @@ if __name__ == "__main__":
     axs[0, 0].set_title(r"Error with $N=4$", fontsize=fontsize)
 
     # Second subplot (N = 4, comparison of approx and exact)
-    axs[0, 1].plot(k_lin1, uk_approx1, "o-", label=r"Approx: $\tilde{u}_k$")
-    axs[0, 1].plot(k_lin1, uk_exact1, "o-", label=r"Exact: $\hat{u}_k$")
+    axs[0, 1].semilogy(k_lin1, uk_approx1, "o-", label=r"Approx: $\tilde{u}_k$")
+    axs[0, 1].semilogy(k_lin1, uk_exact1, "o-", label=r"Exact: $\hat{u}_k$")
     axs[0, 1].set_xlabel("k", fontsize=fontsize)
     axs[0, 1].set_ylabel(r"$u_k$", fontsize=fontsize)
     axs[0, 1].legend(fontsize=fontsize)
@@ -184,8 +182,8 @@ if __name__ == "__main__":
     axs[1, 0].set_title(r"Error with $N=10$", fontsize=fontsize)
 
     # Fourth subplot (N = 10, comparison of approx and exact)
-    axs[1, 1].plot(k_lin2, uk_approx2, "o-", label=r"Approx: $\tilde{u}_k$")
-    axs[1, 1].plot(k_lin2, uk_exact2, "o-", label=r"Exact: $\hat{u}_k$")
+    axs[1, 1].semilogy(k_lin2, uk_approx2, "o-", label=r"Approx: $\tilde{u}_k$")
+    axs[1, 1].semilogy(k_lin2, uk_exact2, "o-", label=r"Exact: $\hat{u}_k$")
     axs[1, 1].set_xlabel("k", fontsize=fontsize)
     axs[1, 1].set_ylabel(r"$u_k$", fontsize=fontsize)
     axs[1, 1].legend(fontsize=fontsize)
@@ -218,7 +216,6 @@ if __name__ == "__main__":
     plt.figure(3)
     plt.plot(N_list,np.log(err),"o-",label=r"$\max_k \ |\tilde{u}_k - \hat{u}_k|$")
     plt.xlabel("N")
-    plt.ylabel(r"Error")
     plt.title("Convergence of Fourier Coefficients")
     plt.legend(fontsize=12)
     #plt.show()
@@ -235,9 +232,7 @@ if __name__ == "__main__":
     plt.semilogy(N_convergence_list,trunc_err,"o-",label=r"Numerical: $||u - P_Nu ||^2$")
     #plt.semilogy(N_convergence_list[:-17],norm_2_tau(N_convergence_list[:-17]),label=r"Analytical: $||\tau||^2 \sim e^{- \alpha \frac{N}{2}}$")
     plt.xlabel("N")
-    plt.ylabel(r"$||\tau||^2$")
     plt.legend()
-    plt.title("Convergence Plot (Semilog)")
     
     
     # Discrete fourier transform
@@ -274,13 +269,11 @@ if __name__ == "__main__":
     trunc_err_approx = convergence_list(N_convergence_list,fourier_approx,u_func,uk_approx_func)
 
     plt.figure(7)
-    plt.semilogy(N_convergence_list,trunc_err,"o-",label=r"$||u - P_Nu ||_{\infty}$")
-    plt.semilogy(N_convergence_list,trunc_err_approx,"o-",label="$||u - I_Nu||_{\infty}$")
+    plt.semilogy(N_convergence_list,trunc_err,"o-",label=r"$||u - P_Nu ||^2$")
+    plt.semilogy(N_convergence_list,trunc_err_approx,"o-",label="$||u - I_Nu||^2$")
     plt.semilogy(N_list[:-17],(2-np.sqrt(3))**(N_list[:-17]/2),label=r"$||\tau||^2 \sim e^{- \alpha \frac{N}{2}}$")
     plt.xlabel("N")
-    plt.ylabel(r"$||\tau||^2$")
     plt.legend()
-    plt.title("Convergence plot")
 
     #%% Lagrange interpolation Exercise C
 
@@ -334,7 +327,7 @@ if __name__ == "__main__":
 
     # Plot approximate diff for several N and the convergence plot
 
-    N_convergence_list = np.arange(4,64*10,8)
+    N_convergence_list = np.arange(4,64*50,50)
     err = np.zeros(len(N_convergence_list))
     for idx,Nc in enumerate(N_convergence_list):
         j_lin_loop   = np.arange(0,Nc)
@@ -350,14 +343,13 @@ if __name__ == "__main__":
         Dv_approx = D@v(xj_loop) 
         plt.plot(xj_loop,Dv_approx,label=f"$Dv$ for N = {Nc}",linestyle='--')
         plt.xlabel("N")
-        plt.ylabel("Dv")
         plt.legend()
         plt.grid()
         
     plt.figure(12)
-    plt.semilogy(N_convergence_list,err)
+    plt.semilogy(N_convergence_list,err,label="$||v'(x)-Dv||_\infty$")
     plt.xlabel("N")
-    plt.ylabel("||v'(x)-Dv||")
+    plt.legend()
     plt.grid()
 
 
@@ -370,18 +362,19 @@ if __name__ == "__main__":
 
     k_lin_FFt = np.fft.fftfreq(N, d=(2 * np.pi) / N) * 2 * np.pi
     dvdx = ifft(1j*k_lin_FFt*fft(v(xj))).real
+    dvdx = np.append(dvdx,dvdx[0])
     D,Dh = D_matrix(N,xj,j_lin)
     Dv_approx = D@v(xj)
+    Dv_approx = np.append(Dv_approx, Dv_approx[0])
     Dv_exact = diff_v(x_lin)  
+    xj2 = np.append(xj,np.array([2*np.pi]))
 
     plt.figure(13)
-    plt.plot(x_lin,Dv_exact,label="exact")
-    plt.plot(xj,Dv_approx,'-',label="approx")
-    plt.plot(xj,dvdx,'--',label="FFT")
+    plt.plot(x_lin,Dv_exact,label="dv/dx")
+    plt.plot(xj2,Dv_approx,'-',label="Dx")
+    plt.plot(xj2,dvdx,'--',label="FFT")
     plt.legend()
-    plt.title("FFT using N=6")
     plt.xlabel("x")
-    plt.ylabel("dv/dx")
     plt.grid()
 
     #%% FFT performance study 
@@ -393,6 +386,8 @@ if __name__ == "__main__":
     times_Mat = []
     err_FFT = []
 
+    #N_convergence_list = np.arange(4,64*20,10)
+
     for Nc in N_convergence_list:
 
         # Initializations for both methods
@@ -401,12 +396,12 @@ if __name__ == "__main__":
         xj_loop      = 2*np.pi*j_lin_loop/(Nc)
         D,Dh = D_matrix(Nc,xj_loop,j_lin_loop)
 
-        # Timing FFT
+        # Timing FFT 
         t_FFT = perf_counter()
         dvdx = ifft(1j*k_lin_FFt*fft(v(xj_loop))).real
         t_FFT = perf_counter()-t_FFT
 
-        # Timing matrix
+        # Timing matrix 
         t_Dv = perf_counter()
         Dv_approx = D@v(xj_loop)
         t_Dv = perf_counter()- t_Dv
@@ -420,17 +415,18 @@ if __name__ == "__main__":
 
 
     plt.figure(14)
-    plt.semilogy(N_convergence_list,err,"o-",label="Mat convergence")
-    plt.semilogy(N_convergence_list,err_FFT,"o-",label="FFT convergence")
+    plt.semilogy(N_convergence_list,err,label="Matrix convergence")
+    plt.semilogy(N_convergence_list,err_FFT,label="FFT convergence")
     plt.xlabel("N")
-    plt.ylabel("||v'(x)-Dv||")
     plt.legend()
     plt.grid()
 
     # Performance study plot
     plt.figure(15)
-    plt.semilogy(N_convergence_list,times_FFT,"o-",label="Times of FFT")
-    plt.semilogy(N_convergence_list,times_Mat,"o-",label="Times of Mat")
+    plt.semilogy(N_convergence_list,times_FFT,label="Times of FFT")
+    plt.semilogy(N_convergence_list,times_Mat,label="Times of Mat")
+    plt.semilogy(N_convergence_list,N_convergence_list*np.log(N_convergence_list)*0.001,label="$N\logN$")
+    plt.semilogy(N_convergence_list,N_convergence_list**2*0.001,label="$N^2$")
     plt.xlabel("N")
     plt.ylabel("Time [seconds]")
     plt.legend()

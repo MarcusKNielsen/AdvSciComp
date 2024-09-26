@@ -259,13 +259,14 @@ if __name__ == "__main__":
     k_list = np.arange(0,N)
     x_GL = JacobiGL(alpha=0, beta=0, N=N)
     vk_approx = uk_approx_func(v_func,k_list,x_GL,N,alpha=0,beta=0)
+    V = get_vandermonde(x_GL)
     
     u_approx = poly_approx(k_list,x_GL,vk_approx)
     
     
     plt.figure()
     x = np.linspace(-1,1,1000)
-    plt.plot(x_GL,u_approx,".-",label="Approx")
+    plt.plot(x_GL,u_approx,".-",label="$\mathcal{V}\hat{v}$")
     plt.plot(x,v_func(x),label=r"$\sin(\pi x)$")
     plt.xlabel("x")
     plt.legend()
@@ -300,7 +301,6 @@ if __name__ == "__main__":
     plt.figure()
     plt.semilogy(N_list,err,".-",label=r"$\max_x | \sin(\pi x) - \tilde{V} \ V^{-1} \bar{u}|$")
     plt.xlabel("N")
-    plt.ylabel("error")
     plt.legend()
     #plt.show(()
     
@@ -341,7 +341,7 @@ if __name__ == "__main__":
     for Ni in N_list:
 
         x_GL = JacobiGL(alpha=0,beta=0,N=Ni)
-        V = get_vandermonde(x_GL)
+        V = get_vandermonde_norm(x_GL)
         # v'(x)-Dv(x)
         expression = dv_func(x_GL)-D_poly(x_GL)@v_func(x_GL)
         weights    = 2/(Ni*(Ni+1))* 1/(JacobiP(x_GL,alpha=0,beta=0,N=Ni)**2)
@@ -349,10 +349,9 @@ if __name__ == "__main__":
         norm_error_V.append(expression.T@np.linalg.inv((V@V.T))@expression)
        
     plt.figure()
-    plt.semilogy(N_list, norm_error,label="Normal")
-    plt.semilogy(N_list,norm_error_V,label="V")
+    plt.semilogy(N_list, norm_error,label=r"$||v'(x)-Dv(x)||_N^2$")
+    plt.semilogy(N_list,norm_error_V,label=r"$(v'(x)-Dv(x))^T(VV^T)^{-1}(v'(x)-Dv(x))$")
     plt.xlabel("N")
-    plt.ylabel("$||v'-Dv||_N^2$")
     plt.legend()
 
     plt.figure()
@@ -362,7 +361,7 @@ if __name__ == "__main__":
 
     #%% l) 
 
-    N = 100
+    N = 10
     x_GL = JacobiGL(alpha=0,beta=0,N=N)
     V = get_vandermonde_norm(x_GL)
     M = np.linalg.inv(V@V.T)
