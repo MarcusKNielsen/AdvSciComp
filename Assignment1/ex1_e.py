@@ -56,7 +56,7 @@ def D_matrix(N, xj, j_lin):
         
         # Compute numerator and denominator separately
         numerator = (np.cos(N * delta / 2) * np.cos(delta / 2) * N * np.sin(delta / 2) - np.sin(N * delta / 2))
-        denominator = 2 * N * (np.sin(delta / 2))**2
+        denominator = 4 * N * (np.sin(delta / 2))**2
         
         # Initialize result array with zeros
         result = np.zeros_like(delta)
@@ -88,7 +88,7 @@ N = 100
 k_lin = check_N(N)
 
 j_lin   = np.arange(0,N)
-xj      = 2*np.pi*j_lin/(N)
+xj      = 2*np.pi*j_lin/N
 D,_ = D_matrix(N,xj,j_lin)
 
 i = 1
@@ -96,7 +96,7 @@ Dv_approx = D@w(xj,i)
 
 plt.figure()
 plt.plot(xj,Dv_approx,".-")
-plt.plot(x,2*w(x,i-1),label=r"$w^0$")
+plt.plot(x,w(x,i-1),label=r"$w^0$")
 plt.xlabel("x")
 
 plt.show()
@@ -113,7 +113,7 @@ for i in range(1,4):
         xj_loop      = 2*np.pi*j_lin_loop/(Nc)
         D,_     = D_matrix(Nc,xj_loop,j_lin_loop)
         Dv_approx = D@w(xj_loop,i)
-        Dv_exact = 2*w(xj_loop,i-1) 
+        Dv_exact = w(xj_loop,i-1) 
     
         err[idx] = discrete_norm(Dv_approx-Dv_exact)
     plt.loglog(N_convergence_list,err,"o-",label=fr"$\Vert \frac{{d w^{{{i}}}}}{{dx}} - D w^{{{i}}} \Vert_N$",markersize=4)

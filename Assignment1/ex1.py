@@ -134,66 +134,82 @@ if __name__ == "__main__":
     plt.legend(fontsize=12) 
     #plt.show()
 
-    #%%
 
+    #%%
+    
     """
     Exercise 1: b)
     Comparison of analytical and discrete fourier coefficients for different N
     """
-
+    
     # Define fontsize variable
-    fontsize = 12
-
-    # N = 4
-    N1 = 4
-    k_lin1 = check_N(N1)
-
-    uk_approx1 = discrete_fourier_coefficients(k_lin1).real
-    uk_exact1 = uk_func(k_lin1)
-
-    # N = 10
-    N2 = 10
-    k_lin2 = check_N(N2)
-
-    uk_approx2 = discrete_fourier_coefficients(k_lin2).real
-    uk_exact2 = uk_func(k_lin2)
-
-    # Create a 2x2 grid for the subplots
-    fig, axs = plt.subplots(2, 2, figsize=(10, 8)) 
-
-    # First subplot (N = 4, comparison of Fourier coefficients) 
-    axs[0, 0].plot(k_lin1, np.abs(uk_approx1 - uk_exact1), "o-")
-    axs[0, 0].set_xlabel("k", fontsize=fontsize)
-    axs[0, 0].set_ylabel(r"$|\tilde{u}_k - \hat{u}_k|$", fontsize=fontsize) 
-    axs[0, 0].set_title(r"Error with $N=4$", fontsize=fontsize)
-
-    # Second subplot (N = 4, comparison of approx and exact)
-    axs[0, 1].semilogy(k_lin1, uk_approx1, "o-", label=r"Approx: $\tilde{u}_k$")
-    axs[0, 1].semilogy(k_lin1, uk_exact1, "o-", label=r"Exact: $\hat{u}_k$")
-    axs[0, 1].set_xlabel("k", fontsize=fontsize)
-    axs[0, 1].set_ylabel(r"$u_k$", fontsize=fontsize)
-    axs[0, 1].legend(fontsize=fontsize)
-    axs[0, 1].set_title(r"Approx vs Exact with $N=4$", fontsize=fontsize) 
-
-    # Third subplot (N = 10, comparison of Fourier coefficients)
-    axs[1, 0].plot(k_lin2, np.abs(uk_approx2 - uk_exact2), "o-")
-    axs[1, 0].set_xlabel("k", fontsize=fontsize)
-    axs[1, 0].set_ylabel(r"$|\tilde{u}_k - \hat{u}_k|$", fontsize=fontsize) 
-    axs[1, 0].set_title(r"Error with $N=10$", fontsize=fontsize)
-
-    # Fourth subplot (N = 10, comparison of approx and exact)
-    axs[1, 1].semilogy(k_lin2, uk_approx2, "o-", label=r"Approx: $\tilde{u}_k$")
-    axs[1, 1].semilogy(k_lin2, uk_exact2, "o-", label=r"Exact: $\hat{u}_k$")
-    axs[1, 1].set_xlabel("k", fontsize=fontsize)
-    axs[1, 1].set_ylabel(r"$u_k$", fontsize=fontsize)
-    axs[1, 1].legend(fontsize=fontsize)
-    axs[1, 1].set_title(r"Approx vs Exact with $N=10$", fontsize=fontsize) 
-
-    # Adjust layout to avoid overlap
+    fontsize = 10
+    
+    # Define all the N values
+    N_values = [4, 8, 16, 32, 64]
+    
+    # Create lists to store k_lin, uk_approx, and uk_exact for all N values
+    k_lin_list = []
+    uk_approx_list = []
+    uk_exact_list = []
+    
+    # Loop through all N values to calculate the necessary arrays
+    for N in N_values:
+        k_lin = check_N(N)
+        uk_approx = discrete_fourier_coefficients(k_lin).real
+        uk_exact = uk_func(k_lin)
+        
+        k_lin_list.append(k_lin)
+        uk_approx_list.append(uk_approx)
+        uk_exact_list.append(uk_exact)
+    
+    # Create a 5x2 grid for the subplots (10 subplots total)
+    fig, axs = plt.subplots(5, 2, figsize=(9, 9))  # Changed to 5x2 grid
+    
+    # Flatten axs for easy access
+    axs = axs.flatten()
+    
+    # Loop through each N value and populate the subplots
+    for i, N in enumerate(N_values):
+        k_lin = k_lin_list[i]
+        uk_approx = uk_approx_list[i]
+        uk_exact = uk_exact_list[i]
+        
+        # First plot (Error comparison for N)
+        axs[2*i].plot(k_lin, np.abs(uk_approx - uk_exact), "o-")
+        if N == N_values[-1]:
+            axs[2*i].set_xlabel("k", fontsize=fontsize)
+        axs[2*i].set_ylabel(r"$|\tilde{u}_k - \hat{u}_k|$", fontsize=fontsize)
+        if N == N_values[0]:
+            axs[2*i].set_title(f"Error", fontsize=fontsize+2)
+        
+        # Add a text box in the top-left corner to indicate N value
+        axs[2*i].text(0.6, 0.90, f'N = {N}', transform=axs[2*i].transAxes, 
+                      fontsize=fontsize, verticalalignment='top', bbox=dict(facecolor='white', alpha=0.5))
+    
+        # Second plot (Approx vs Exact for N)
+        axs[2*i+1].semilogy(k_lin, uk_approx, "o-", label=r"Approx: $\tilde{u}_k$")
+        axs[2*i+1].semilogy(k_lin, uk_exact, "o-", label=r"Exact: $\hat{u}_k$")
+        if N == N_values[-1]:
+            axs[2*i+1].set_xlabel("k", fontsize=fontsize)
+        axs[2*i+1].set_ylabel(r"$u_k$", fontsize=fontsize)
+        axs[2*i+1].legend(loc='lower center',fontsize=fontsize-1)
+        if i == 0:
+            axs[2*i+1].set_title(f"Approx vs Exact Coefficients", fontsize=fontsize+2)
+    
+        # Add a text box in the top-left corner to indicate N value
+        axs[2*i+1].text(0.05, 0.90, f'N = {N}', transform=axs[2*i+1].transAxes, 
+                        fontsize=fontsize, verticalalignment='top', bbox=dict(facecolor='white', alpha=0.5))
+    
+    # Adjust layout to add more vertical space
     plt.tight_layout()
-
+    plt.subplots_adjust(hspace=0.5)  # Increase vertical space between plots
+    
     # Display the plot
     #plt.show()
+
+
+
 
     #%%
 
@@ -291,16 +307,16 @@ if __name__ == "__main__":
     for j_idx in range(N):
         
         y = lagrange_interpolation(xj[j_idx],x_lin,N)
-        plt.plot(x_lin,y,label="$j_{idx}$"+f"={j_idx}")
+        plt.plot(x_lin,y,label=rf"$h_{{{j_idx}}}(x)$")
 
-        #pointx = xj
-        #pointy = lagrange_interpolation(xj[j_idx],xj,N)
-        #plt.scatter(pointx,pointy,label="$j_{idx}$"+f"={j_idx}")
+        pointx = xj
+        pointy = lagrange_interpolation(xj[j_idx],xj,N)
+        plt.scatter(pointx,pointy,label=rf"$h_{{{j_idx}}}(x_i) = \delta_{{{j_idx},i}}$")
 
     plt.xlabel("x")
     plt.ylabel("$h_j$(x)")
     plt.title("Lagrange polynomials")
-    plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3)
+    plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=3)
     plt.tight_layout()
 
     D,Dh = D_matrix(N,xj,j_lin)
@@ -310,6 +326,7 @@ if __name__ == "__main__":
     plt.plot(x_lin,10*lagrange_interpolation(xj[2],x_lin,N),label="h")
     plt.legend()
 
+
     Dv_approx = D@v(xj)
     Dv_exact = diff_v(xj)    
 
@@ -318,6 +335,7 @@ if __name__ == "__main__":
     plt.plot(xj,Dv_approx,label="approx")
     plt.grid()
 
+    #%%
 
     # Plot 10
     Dv_exact = diff_v(x_lin)   
@@ -325,9 +343,10 @@ if __name__ == "__main__":
     plt.plot(x_lin,Dv_exact,label="v'(x)")
 
 
+
     # Plot approximate diff for several N and the convergence plot
 
-    N_convergence_list = np.arange(4,64*50,50)
+    N_convergence_list = np.arange(4,64*2,4)
     err = np.zeros(len(N_convergence_list))
     for idx,Nc in enumerate(N_convergence_list):
         j_lin_loop   = np.arange(0,Nc)
@@ -335,19 +354,22 @@ if __name__ == "__main__":
         D,_     = D_matrix(Nc,xj_loop,j_lin_loop)
         Dv_approx = D@v(xj_loop) 
         Dv_exact = diff_v(xj_loop)  
-
+        
+        
         err[idx] = np.max(np.abs(Dv_approx-Dv_exact))
-        #err.append(np.max(np.abs(Dv_approx-Dv_exact)))
 
         # Add on plot 9
-        Dv_approx = D@v(xj_loop) 
+        Dv_approx = np.concatenate((Dv_approx, [Dv_approx[0]]))
+        xj_loop = np.concatenate((xj_loop , [2*np.pi]))
         plt.plot(xj_loop,Dv_approx,label=f"$Dv$ for N = {Nc}",linestyle='--')
-        plt.xlabel("N")
+        plt.xlabel("x")
         plt.legend()
         plt.grid()
         
+
+        
     plt.figure(12)
-    plt.semilogy(N_convergence_list,err,label="$||v'(x)-Dv||_\infty$")
+    plt.semilogy(N_convergence_list,err,".-",label="$||v'(x)-Dv||_\infty$")
     plt.xlabel("N")
     plt.legend()
     plt.grid()
@@ -370,11 +392,12 @@ if __name__ == "__main__":
     xj2 = np.append(xj,np.array([2*np.pi]))
 
     plt.figure(13)
-    plt.plot(x_lin,Dv_exact,label="dv/dx")
-    plt.plot(xj2,Dv_approx,'-',label="Dx")
-    plt.plot(xj2,dvdx,'--',label="FFT")
+    plt.plot(x_lin,Dv_exact,label=r"$\frac{dv}{dx}$")
+    plt.plot(xj2,Dv_approx,'-',label=r"$Dv$")
+    plt.plot(xj2,dvdx,'--',label=r"FFT: $Dv$")
     plt.legend()
     plt.xlabel("x")
+    plt.title(f"Using FFT to compute discrete derivative: N={N}")
     plt.grid()
 
     #%% FFT performance study 
@@ -415,18 +438,19 @@ if __name__ == "__main__":
 
 
     plt.figure(14)
-    plt.semilogy(N_convergence_list,err,label="Matrix convergence")
-    plt.semilogy(N_convergence_list,err_FFT,label="FFT convergence")
+    plt.semilogy(N_convergence_list,err,".-",label="Matrix convergence")
+    plt.semilogy(N_convergence_list,err_FFT,".-",label="FFT convergence")
     plt.xlabel("N")
     plt.legend()
     plt.grid()
+    plt.show()
 
     # Performance study plot
     plt.figure(15)
-    plt.semilogy(N_convergence_list,times_FFT,label="Times of FFT")
-    plt.semilogy(N_convergence_list,times_Mat,label="Times of Mat")
-    plt.semilogy(N_convergence_list,N_convergence_list*np.log(N_convergence_list)*0.001,label="$N\logN$")
-    plt.semilogy(N_convergence_list,N_convergence_list**2*0.001,label="$N^2$")
+    plt.semilogy(N_convergence_list,times_FFT,label="FFT")
+    plt.semilogy(N_convergence_list,times_Mat,label="Mat")
+    #plt.semilogy(N_convergence_list,N_convergence_list*np.log(N_convergence_list)*0.001,label="$N\logN$")
+    #plt.semilogy(N_convergence_list,N_convergence_list**2*0.001,label="$N^2$")
     plt.xlabel("N")
     plt.ylabel("Time [seconds]")
     plt.legend()
@@ -434,5 +458,5 @@ if __name__ == "__main__":
 
     plt.show()
 
-    debug = True
+    #debug = True
 

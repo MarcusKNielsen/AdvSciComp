@@ -127,7 +127,7 @@ def uk_approx_func(u_func,k_list,xj,N,alpha=0,beta=0):
 
 def poly_approx(k_lin,x_GL,uk):
     u_approx = np.zeros_like(x_GL)
-    for k in k_list:
+    for k in k_lin:
         u_approx += uk[k] * JacobiP(x_GL,alpha=0,beta=0,N=k)
     return u_approx
 
@@ -173,20 +173,18 @@ if __name__ == "__main__":
 
 
     #%% i 
+    
     # List of N used in convergence plot
     N_list = np.array([10,40,80,100,200])
+    
     # Analytical function 
     u_func = lambda x: 1/(2-np.cos(np.pi*(x+1))) # Remove pi, to let x = [-1:1]
-    # Discrete poly coefficients
-    #uk_approx_func = lambda k,N: discrete_poly_coefficients(k,N,u_func=u_func)
 
-    #x_lin = np.linspace(-1,1,200)
     k_list = np.arange(0,200)
 
     uk_approx = np.zeros([len(k_list),len(N_list)])
-
+    
     fig, axs = plt.subplots(len(N_list), 1, figsize=(7, len(N_list)*2), constrained_layout=True)
-
     for N_idx, N in enumerate(N_list):
 
         xj = JacobiGL(alpha=0, beta=0, N=N)
@@ -194,22 +192,17 @@ if __name__ == "__main__":
         
         axs[N_idx].vlines(N_list[N_idx], min(uk_approx[:, N_idx]), max(uk_approx[:, N_idx]), 
                           linestyle="--", color="red", label=f"N = {N_list[N_idx]}")
-        axs[N_idx].plot(k_list, uk_approx[:, N_idx], ".-", label=r"$u_k$")
+        axs[N_idx].plot(k_list, uk_approx[:, N_idx], ".-", label=r"$\tilde{f}_k$")
         
-        
+        axs[N_idx].set_xlabel("k")
+        axs[N_idx].set_ylabel(r"$\tilde{f}_k$")
         axs[N_idx].set_title(f"Plot for N = {N}")
-        axs[N_idx].legend()
+        axs[N_idx].legend(loc="upper right")
     
-    # Set a shared x-label for all subplots
-    plt.xlabel('k_list')
-    #plt.show()
-    #trunc_err = convergence_list_poly(N_list,poly_approx,u_func,uk_approx_func)
-    #plt.figure(2)
-    #plt.semilogy(N_list,trunc_err,"o-",label=r"Numerical: $||u - I_Nu ||^2$")
-    #plt.xlabel("N")
-    #plt.ylabel(r"$||\tau||^2$")
-    #plt.legend(fontsize=12) 
-    #plt.title("Convergence Plot (logarithmic y-axis)")
+    plt.show()
+
+        
+
 
     #%% j 
 
@@ -253,10 +246,10 @@ if __name__ == "__main__":
     #%% j approx sin(pi x)
     
     v_func = lambda x: np.sin(np.pi * x)
-    N_points = 40
+    N_points = 10
     
     N = N_points - 1
-    k_list = np.arange(0,N)
+    k_list = np.arange(0,N+1)
     x_GL = JacobiGL(alpha=0, beta=0, N=N)
     vk_approx = uk_approx_func(v_func,k_list,x_GL,N,alpha=0,beta=0)
     V = get_vandermonde(x_GL)
@@ -264,13 +257,29 @@ if __name__ == "__main__":
     u_approx = poly_approx(k_list,x_GL,vk_approx)
     
     
-    plt.figure()
-    x = np.linspace(-1,1,1000)
-    plt.plot(x_GL,u_approx,".-",label="$\mathcal{V}\hat{v}$")
-    plt.plot(x,v_func(x),label=r"$\sin(\pi x)$")
-    plt.xlabel("x")
-    plt.legend()
-    #plt.show(()
+    # Create subplots: 1 row, 2 columns
+    fig, ax = plt.subplots(1, 2, figsize=(10, 4))
+    
+    # First plot
+    x = np.linspace(-1, 1, 1000)
+    ax[0].plot(x_GL, get_vandermonde(x_GL) @ vk_approx, ".", label=r"$\bar{v} = \mathcal{V} \ \hat{v}$")
+    ax[0].plot(x, v_func(x), label=r"$v(x) = \sin(\pi x)$")
+    ax[0].set_xlabel("x")
+    ax[0].legend(fontsize=12)
+    ax[0].set_title(rf"Plot of the interpolant $\bar{{v}}$ at {N_points} Gauss-Lobatto nodes")
+    
+    # Second plot
+    x = np.linspace(-1, 1, 100)
+    ax[1].plot(x, get_extended_vandermonde(x, N + 1) @ vk_approx, ".", label=r"$\bar{\bar{v}} = \tilde{\mathcal{V}} \ \hat{v}$")
+    x = np.linspace(-1, 1, 1000)
+    ax[1].plot(x, v_func(x), label=r"$v(x) = \sin(\pi x)$")
+    ax[1].set_xlabel("x")
+    ax[1].legend(fontsize=12)
+    ax[1].set_title(rf"Plot of the interpolant $\bar{{\bar{{v}}}}$ on {100} uniform grid points")
+    
+    # Show the figure
+    plt.tight_layout()
+    plt.show()
     
     # Convergence plot
     N_list = np.arange(2,50,2)
@@ -278,14 +287,14 @@ if __name__ == "__main__":
     for N_idx,N in enumerate(N_list):
         
         # Compute approximation
-        k_list = np.arange(0,N)
+        k_list = np.arange(0,N+1)
         x_GL = JacobiGL(alpha=0, beta=0, N=N)
         vk_approx = uk_approx_func(v_func,k_list,x_GL,N,alpha=0,beta=0)
-        u_approx = poly_approx(k_list,x_GL,vk_approx)
+        #u_approx = poly_approx(k_list,x_GL,vk_approx)
         
         # Setup Vandermonde matrices
-        V = get_vandermonde(x_GL)
-        V_inv = np.linalg.inv(V)
+        #V = get_vandermonde(x_GL)
+        #V_inv = np.linalg.inv(V)
         x = np.linspace(-1,1,100)
         Vm = get_extended_vandermonde(x,N+1)
         
@@ -295,41 +304,41 @@ if __name__ == "__main__":
         
         
         # compute discrete L2 - error 
-        err[N_idx] = np.max(np.abs(u_true-Vm@V_inv@u_approx))
+        #err[N_idx] = np.max(np.abs(u_true-Vm@V_inv@u_approx))
+        err[N_idx] = np.max(np.abs(u_true-Vm@vk_approx))
         #err[N_idx] = np.max(np.abs(u_true_on_GL-u_approx))
     
     plt.figure()
-    plt.semilogy(N_list,err,".-",label=r"$\max_x | \sin(\pi x) - \tilde{V} \ V^{-1} \bar{u}|$")
+    plt.semilogy(N_list,err,".-",label=r"$\max_x | \sin(\pi x) - \tilde{V} \ \hat{v}|$")
     plt.xlabel("N")
-    plt.legend()
-    #plt.show(()
+    plt.legend(fontsize=12)
+    plt.title("Convergence Test (logarithmic y-axis)")
+    plt.show()
     
     #%% j Extrapolation
     
     v_func = lambda x: np.sin(np.pi * x)
-    #dv_func = lambda x: np.pi*np.cos(np.pi*x)
     N_points = 40
     
     N = N_points - 1
-    k_list = np.arange(0,N)
+    k_list = np.arange(0,N+1)
     x_GL = JacobiGL(alpha=0, beta=0, N=N)
     vk_approx = uk_approx_func(v_func,k_list,x_GL,N,alpha=0,beta=0)
     
-    u_approx = poly_approx(k_list,x_GL,vk_approx)
     
     # Setup Vandermonde matrices on larger domain
-    V = get_vandermonde(x_GL)
-    V_inv = np.linalg.inv(V)
     x = np.linspace(-1.4,1.4,100)
     Vm = get_extended_vandermonde(x,N+1)
     
     plt.figure()
-    plt.plot(x,Vm@V_inv@u_approx,".-",label=r"$\tilde{V} \ V^{-1} \bar{u}$")
+    plt.plot(x,Vm@vk_approx,".-",label=r"$\tilde{V} \ \hat{v}$")
     plt.plot(x,v_func(x),label=r"$\sin(\pi x)$")
     plt.xlabel("x")
     plt.legend()
     plt.title("Extrapolation")
-    ##plt.show(()
+    #plt.show()
+
+    #%%
 
     # k) Derivative using Vandermonde
     v_func = lambda x: np.exp(np.sin(np.pi * x))
@@ -349,9 +358,10 @@ if __name__ == "__main__":
         norm_error_V.append(expression.T@np.linalg.inv((V@V.T))@expression)
        
     plt.figure()
-    plt.semilogy(N_list, norm_error,label=r"$||v'(x)-Dv(x)||_N^2$")
-    plt.semilogy(N_list,norm_error_V,label=r"$(v'(x)-Dv(x))^T(VV^T)^{-1}(v'(x)-Dv(x))$")
+    #plt.semilogy(N_list, norm_error,".-",label=r"$||v'(x)-Dv(x)||_N^2$")
+    plt.semilogy(N_list,norm_error_V,".-",label=r"$||v'(x)-Dv(x)||_N^2$")
     plt.xlabel("N")
+    plt.title("Convergence Test (logarithmic y-axis)")
     plt.legend()
 
     plt.figure()
