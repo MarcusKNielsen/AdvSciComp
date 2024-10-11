@@ -84,7 +84,7 @@ def discrete_inner_product(u,v):
 def discrete_norm(u):
     return discrete_inner_product(u,u)
 
-N = 100
+N = 8
 k_lin = check_N(N)
 
 j_lin   = np.arange(0,N)

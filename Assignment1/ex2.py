@@ -171,7 +171,6 @@ if __name__ == "__main__":
 
     Jacobi_visualize()
 
-
     #%% i 
     
     # List of N used in convergence plot

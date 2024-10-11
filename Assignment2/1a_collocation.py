@@ -102,7 +102,7 @@ def solve_Collocation(N,epsilon_values):
 
     return u_solutions
 
-N = 10
+N = 4
 epsilon_values = np.array([0.1,0.01,0.001])
 
 u_solutions = solve_Collocation(N,epsilon_values)
@@ -127,6 +127,7 @@ for idx,eps in enumerate(epsilon_values):
 # Adjust layout to prevent overlap
 plt.tight_layout(pad=2.0, w_pad=1.0, h_pad=2.5)
 
+#%%
 
 # Convergence plot
 N_array = np.arange(10,200,10)
