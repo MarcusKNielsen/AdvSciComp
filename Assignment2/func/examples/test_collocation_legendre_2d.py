@@ -1,14 +1,17 @@
 import numpy as np
 from numpy.linalg import inv,solve
-from legendre import vander
+from legendre import vander,nodes
 import matplotlib.pyplot as plt
-from JacobiGL import JacobiGL
 
 def u_exact(x,y):
     return np.sin(x)*np.sin(y)
 
+"""
+The error seems to large
+"""
+
 N = 32
-x = JacobiGL(0,0,N)
+x = nodes(N)
 V,Vx,_ = vander(x)
 D = Vx @ inv(V)
 

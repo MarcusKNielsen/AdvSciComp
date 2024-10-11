@@ -1,22 +1,25 @@
 import numpy as np
 from numpy.linalg import inv
-from legendre import vander, discrete_inner_product
+from legendre import vander, nodes
 import matplotlib.pyplot as plt
-from JacobiGL import JacobiGL
 from scipy.integrate import solve_ivp
 from scipy.stats import norm
+from L2space import discrete_inner_product
+
+"""
+Just for fun
+"""
+
 N = 128
-x = JacobiGL(0,0,N)
+x = nodes(N)
 
 V,Vx,w = vander(x)
-
 
 Vinv = inv(V)
 
 D = Vx @ Vinv
 
 eps = 0.001
-
 
 A = eps*D@D
 

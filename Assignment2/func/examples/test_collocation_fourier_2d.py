@@ -3,10 +3,17 @@ from numpy.linalg import solve
 import fourier
 import matplotlib.pyplot as plt
 
+"""
+ - Something weird happens for N even.
+ - There seems to be a factor of 2 missing in the numerical solution.
+   check error = 2*U - U_exact
+"""
+
+
 def u_exact(x,y):
     return np.sin(x)*np.sin(y)
 
-N = 31
+N = 30
 x = fourier.nodes(N)
 D = fourier.diff_matrix(N)
 

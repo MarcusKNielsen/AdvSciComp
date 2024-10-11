@@ -1,12 +1,10 @@
 import numpy as np
 from numpy.linalg import inv,solve
-from legendre import vander
+from legendre import vander, nodes
 import matplotlib.pyplot as plt
-from JacobiGL import JacobiGL
 
-
-N = 32
-x = JacobiGL(0,0,N)
+N = 31
+x = nodes(N)
 
 V,Vx,_ = vander(x)
 

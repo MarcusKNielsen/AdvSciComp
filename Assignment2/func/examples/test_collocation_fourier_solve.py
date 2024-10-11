@@ -3,6 +3,9 @@ from numpy.linalg import solve
 import fourier
 import matplotlib.pyplot as plt
 
+"""
+Something weird happens for N even
+"""
 
 N = 65
 x = fourier.nodes(N)
