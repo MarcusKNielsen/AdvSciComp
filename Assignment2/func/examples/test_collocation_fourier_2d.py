@@ -1,6 +1,6 @@
 import numpy as np
 from numpy.linalg import solve
-import fourier
+#import fourier
 import matplotlib.pyplot as plt
 
 """
@@ -8,7 +8,11 @@ import matplotlib.pyplot as plt
  - There seems to be a factor of 2 missing in the numerical solution.
    check error = 2*U - U_exact
 """
-
+import sys
+sys.path.insert(0,r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandidat\2_semester\Advanced nummerical\AdvSciComp\Assignment2\func")
+sys.path.append(r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandidat\2_semester\Advanced nummerical\AdvSciComp\Assignment2")
+#from legendre import vander, nodes
+from fourier import fourier
 
 def u_exact(x,y):
     return np.sin(x)*np.sin(y)

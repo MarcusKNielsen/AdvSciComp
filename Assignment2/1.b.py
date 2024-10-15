@@ -2,57 +2,76 @@ import numpy as np
 from numpy.linalg import inv,solve
 import matplotlib.pyplot as plt
 
-def u_exact(x,y):
-    return np.sin(x)*np.sin(y)
+r1 = 1
+r2 = 3
+
+def g_exact(w,theta):
+
+    r = 2*(w-r1)/(r2-r1)-1
+
+    return (r+r1**2/r)*np.cos(theta)
 
 import sys
 sys.path.insert(0,r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandidat\2_semester\Advanced nummerical\AdvSciComp\Assignment2\func")
 sys.path.append(r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandidat\2_semester\Advanced nummerical\AdvSciComp\Assignment2")
-from legendre import vander, nodes
-
+import legendre as l
+import fourier as f
 
 
 """
 The error seems to large
 """
 
-N = 3
-x = nodes(N)
-V,Vx,_ = vander(x)
-D = Vx @ inv(V)
+Nw = 10
+Ntheta = 15
+w = l.nodes(Nw)          # r expressed in w
+theta = f.nodes(Ntheta)  # theta
 
-X,Y = np.meshgrid(x,x)
+# r variable
+Vander_w,Vw,_ = l.vander(w)
+D_w = Vw @ inv(Vander_w)    # Computing differentiation matrix
+D_theta = f.diff_matrix(Ntheta) # Computing differentiation matrix directly
+
+# Setting up grid based on the 2 variables
+X,Y = np.meshgrid(w,theta)
 
 # Tensor Product
-Dx = np.kron(D, np.eye(N))
-Dy = np.kron(np.eye(N), D)
+Dx = np.kron(D_w, np.eye(Ntheta))
+Dy = np.kron(np.eye(Nw), D_theta)
 
 # Compute the right-hand side
-b = (-2)*u_exact(X,Y)
+b = 0*g_exact(X,Y)
 
 # Identify boundary indices (first and last rows/columns in 2D)
-bc_idx_x,bc_idx_y = np.where((X == x[0]) | (X == x[-1]) | (Y == x[0]) | (Y == x[-1]))
-
-# Get single index
-bc_idx = bc_idx_x * N + bc_idx_y 
+bc_idx_x,bc_idx_y = np.where((X == w[0]) | (X == w[-1]))
 
 # Set boundary condition 
-b[bc_idx_x,bc_idx_y] = u_exact(X[bc_idx_x,bc_idx_y],Y[bc_idx_x,bc_idx_y])
+b[bc_idx_x,bc_idx_y] = g_exact(X[bc_idx_x,bc_idx_y],Y[bc_idx_x,bc_idx_y])
 
 # Right hand side
 b = b.ravel()
 
 # Laplacian Operator with boundary condition
-A = Dx@Dx + Dy@Dy
+r = (2*(X-r1)/(r2-r1)-1).ravel()
+multi1 = 1/r*(r2-r1)/2*Dx.T
+multi2 = (1/r)**2*(Dy@Dy).T
+A = multi1.T+Dx@Dx+multi2.T
+
+#%% Boundary conditions
+
+# Compute single index
+bc_idx = bc_idx_y * Ntheta + bc_idx_x # OBS NTheta eller NW!!!!
+
+# Inserting BC     
 A[bc_idx] = 0
 A[bc_idx,bc_idx] = 1
 
 # Solve linear system
 U = solve(A,b)
-U = U.reshape(N,N)
+U = U.reshape(Ntheta,Nw)
 
 # Exact solution
-U_exact = u_exact(X, Y)
+U_exact = g_exact(X, Y)
 
 # Error
 error = U - U_exact
