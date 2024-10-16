@@ -5,18 +5,15 @@ import matplotlib.pyplot as plt
 def u_exact(x,y):
     return np.sin(x)*np.sin(y)
 
-import sys
-sys.path.insert(0,r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandidat\2_semester\Advanced nummerical\AdvSciComp\Assignment2\func")
-sys.path.append(r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandidat\2_semester\Advanced nummerical\AdvSciComp\Assignment2")
+#import sys
+#sys.path.insert(0,r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandidat\2_semester\Advanced nummerical\AdvSciComp\Assignment2\func")
+#sys.path.append(r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandidat\2_semester\Advanced nummerical\AdvSciComp\Assignment2")
 from legendre import vander, nodes
 
 
 
-"""
-The error seems to large
-"""
 
-N = 3
+N = 32
 x = nodes(N)
 V,Vx,_ = vander(x)
 D = Vx @ inv(V)

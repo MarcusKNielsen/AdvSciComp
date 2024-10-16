@@ -1,23 +1,20 @@
 import numpy as np
 from numpy.linalg import solve
-#import fourier
 import matplotlib.pyplot as plt
 
 """
  - Something weird happens for N even.
- - There seems to be a factor of 2 missing in the numerical solution.
-   check error = 2*U - U_exact
 """
-import sys
-sys.path.insert(0,r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandidat\2_semester\Advanced nummerical\AdvSciComp\Assignment2\func")
-sys.path.append(r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandidat\2_semester\Advanced nummerical\AdvSciComp\Assignment2")
+#import sys
+#sys.path.insert(0,r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandidat\2_semester\Advanced nummerical\AdvSciComp\Assignment2\func")
+#sys.path.append(r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandidat\2_semester\Advanced nummerical\AdvSciComp\Assignment2")
 #from legendre import vander, nodes
-from fourier import fourier
+import fourier
 
 def u_exact(x,y):
     return np.sin(x)*np.sin(y)
 
-N = 30
+N = 31
 x = fourier.nodes(N)
 D = fourier.diff_matrix(N)
 
@@ -28,7 +25,7 @@ Dx = np.kron(D, np.eye(N))
 Dy = np.kron(np.eye(N), D)
 
 # Compute the right-hand side
-b = (-1)*u_exact(X,Y)
+b = (-2)*u_exact(X,Y)
 
 # Identify boundary indices (first and last rows/columns in 2D)
 bc_idx_x,bc_idx_y = np.where((X == x[0]) | (Y == x[0]))
