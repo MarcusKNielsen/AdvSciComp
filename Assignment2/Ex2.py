@@ -5,12 +5,12 @@ from scipy.integrate import solve_ivp
 from scipy.stats import norm
 from L2space import discrete_inner_product
 
-N = 52
+N = 50
 x = nodes(N)
 
 
-x1 = 10
-x2 = 10
+x1 = 20
+x2 = 20
 
 D = diff_matrix(N)
 D3 = D@D@D
@@ -33,8 +33,8 @@ max_step = alpha * 1.73*8/N**3
 
 for c_i in c:
     u0 = u_exact(x,0,c_i,x0)
-    T = 1.0
-    sol = solve_ivp(f,[0, T],u0,args=(D,D3),max_step=max_step,dense_output=True,method="RK23")
+    tf = 1.0
+    sol = solve_ivp(f,[0, tf],u0,args=(D,D3),max_step=max_step,dense_output=True,method="RK23")
 
     t = sol.t
     U = sol.y.T
@@ -49,8 +49,9 @@ for c_i in c:
 
 
     plt.figure()
-    plt.plot(x,U[0],".-",label=r"$u(x,0)$")
-    plt.plot(x,U[-1],".-",label=r"u(x,T)")
+    plt.plot(x,U[0],".-",label=r"$u(x,0) (Approx)$")
+    plt.plot(x,U[-1],".-",label=r"$u(x,T)$ (Approx)")
+    plt.plot(x,u_exact(x,tf,c_i,x0),"--",label=r"$u(x,T)$ (Exact)")
     plt.legend()
     plt.show()
 
