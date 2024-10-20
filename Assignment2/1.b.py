@@ -15,8 +15,8 @@ def g_exact(w,theta):
 import legendre as l
 import fourier as f
 
-Nw = 32
-Ntheta = 33
+Nw = 35
+Ntheta = 30
 w = l.nodes(Nw)          # r expressed in w
 theta = f.nodes(Ntheta)  # theta
 
@@ -29,8 +29,8 @@ D_theta = f.diff_matrix(Ntheta) # Computing differentiation matrix directly
 X,Y = np.meshgrid(w,theta)
 
 # Tensor Product
-Dx = np.kron(D_w, np.eye(Ntheta))
-Dy = np.kron(np.eye(Nw), D_theta)
+Dx = np.kron(np.eye(Ntheta), D_w)
+Dy = np.kron(D_theta, np.eye(Nw))
 
 # Compute the right-hand side
 b = 0*g_exact(X,Y)
@@ -44,12 +44,12 @@ b[bc_idx_x,bc_idx_y] = g_exact(X[bc_idx_x,bc_idx_y],Y[bc_idx_x,bc_idx_y])
 # Right hand side
 b = b.ravel()
 
-#%%
-
 # Laplacian Operator with boundary condition
-r = ((r2-r1)*(X+1)/2+r1).ravel()
+r = ((r2-r1)*(X+1)/2 + r1).ravel()
 c = 2/(r2-r1)
-A = (c/r) * Dx+ c**2 * Dx@Dx + (1/r)**2*(Dy@Dy)
+A = (c/r) * Dx + c**2 * Dx@Dx + (1/r)**2*(Dy@Dy)
+#A = (c**2/r) * Dx @ (r*Dx) + (1/r)**2*(Dy@Dy) # Alternative
+
 
 #%% Boundary conditions
 
@@ -57,8 +57,8 @@ A = (c/r) * Dx+ c**2 * Dx@Dx + (1/r)**2*(Dy@Dy)
 bc_idx = bc_idx_x * Nw + bc_idx_y # This should be correct now (compare with b1 = b.ravel())
 
 # Inserting BC     
-A[bc_idx] = 0
-A[bc_idx,bc_idx] = 1
+A[bc_idx] = 0.0
+A[bc_idx,bc_idx] = 1.0
 
 # Solve linear system
 U = solve(A,b)

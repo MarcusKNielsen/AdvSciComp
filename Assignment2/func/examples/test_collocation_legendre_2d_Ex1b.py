@@ -15,7 +15,7 @@ def u_exact(x,y):
 #sys.path.append(r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandidat\2_semester\Advanced nummerical\AdvSciComp\Assignment2")
 from legendre import vander, nodes
 
-N = 24
+N = 50
 x = nodes(N)
 V,Vx,_ = vander(x)
 D = Vx @ inv(V)
@@ -24,8 +24,8 @@ X,Y = np.meshgrid(x,x)
 
 # Tensor Product
 I = np.eye(N)
-Dx = np.kron(D, I)
-Dy = np.kron(I, D)
+Dx = np.kron(I,D)
+Dy = np.kron(D,I)
 
 # Compute the right-hand side
 b = np.zeros([N,N])

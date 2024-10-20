@@ -21,8 +21,9 @@ D = Vx @ inv(V)
 X,Y = np.meshgrid(x,x)
 
 # Tensor Product
-Dx = np.kron(D, np.eye(N))
-Dy = np.kron(np.eye(N), D)
+I = np.eye(N)
+Dx = np.kron(I,D)
+Dy = np.kron(D,I)
 
 # Compute the right-hand side
 b = (-2)*u_exact(X,Y)

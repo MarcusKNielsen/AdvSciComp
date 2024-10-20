@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 """
  - Something weird happens for N even.
 """
+
 #import sys
 #sys.path.insert(0,r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandidat\2_semester\Advanced nummerical\AdvSciComp\Assignment2\func")
 #sys.path.append(r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandidat\2_semester\Advanced nummerical\AdvSciComp\Assignment2")
@@ -14,25 +15,31 @@ import fourier
 def u_exact(x,y):
     return np.sin(x)*np.sin(y)
 
-N = 31
-x = fourier.nodes(N)
-D = fourier.diff_matrix(N)
+# x direction
+Nx = 31
+x  = fourier.nodes(Nx)
+Dx = fourier.diff_matrix(Nx)
 
-X,Y = np.meshgrid(x,x)
+# y direction
+Ny = 51
+y  = fourier.nodes(Ny)
+Dy = fourier.diff_matrix(Ny)
+
+X,Y = np.meshgrid(x,y)
 
 # Tensor Product
-I = np.eye(N)
-Dx = np.kron(I,D)
-Dy = np.kron(D,I)
+Dx = np.kron(np.eye(Ny),Dx)
+Dy = np.kron(Dy,np.eye(Nx))
 
 # Compute the right-hand side
 b = (-2)*u_exact(X,Y)
 
 # Identify boundary indices (first and last rows/columns in 2D)
-bc_idx_x,bc_idx_y = np.where((X == x[0]) | (Y == x[0]))
+bc_idx_x,bc_idx_y = np.where((X == x[0]) | (Y == y[0]))
+
 
 # Get single index
-bc_idx = bc_idx_x * N + bc_idx_y
+bc_idx = bc_idx_x * Nx + bc_idx_y
 
 # Set boundary condition
 b[bc_idx_x,bc_idx_y] = u_exact(X[bc_idx_x,bc_idx_y],Y[bc_idx_x,bc_idx_y])
@@ -47,7 +54,8 @@ A[bc_idx,bc_idx] = 1
 
 # Solve linear system
 U = solve(A,b)
-U = U.reshape(N,N)
+
+U = U.reshape(Ny,Nx)
 
 # Exact solution
 U_exact = u_exact(X, Y)
