@@ -100,6 +100,7 @@ def vander(x,N=None,Normalize=True):
         
     return V,Vx,w
 
+
 def nodes(N):
     x = JacobiGL(0,0,N-1)
     return x

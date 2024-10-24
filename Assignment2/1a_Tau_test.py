@@ -3,25 +3,32 @@ from numpy.linalg import solve
 import matplotlib.pyplot as plt
 import sys
 sys.path.insert(0,r"/home/max/Documents/DTU/AdvNumericalMethods/AdvSciComp/Assignment2/func")
-#sys.path.insert(0,r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandidat\2_semester\Advanced nummerical\AdvSciComp\Assignment2\func")
-#sys.path.append(r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandidat\2_semester\Advanced nummerical\AdvSciComp\Assignment2")
+sys.path.insert(0,r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandidat\2_semester\Advanced nummerical\AdvSciComp\Assignment2\func")
+sys.path.append(r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandidat\2_semester\Advanced nummerical\AdvSciComp\Assignment2")
 import legendre
 
 def a_coefs(N,eps):
 
     n = np.arange(N)
     result = np.zeros_like(n, dtype=float)
+
+    # p = 0
     result[n == 0] = 0
+
+    # p even
     even_condition = (n % 2 == 0) & (n != 0)
-    n_even = n[even_condition]
+    n_even = n[even_condition] # indices to multiply
     result[even_condition] = -2 * eps * n_even * (n_even + 1)
-    result[n % 2 != 0] = -2
+
+    # p odd
+    odd_condition = n % 2 != 0
+    result[odd_condition] = -2
     
     return result
 
 # parameters
 N = 50
-eps = 0.1
+eps = 1
 
 x = legendre.nodes(N)
 V,_,_ = legendre.vander(x,N)
@@ -43,7 +50,6 @@ for n in range(1,N-2):
 A[-2] = V[0]
 A[-1] = V[-1]
 
-
 # Setup right hand side
 b = np.zeros(N)
 b[0] = 1
@@ -53,6 +59,7 @@ u_hat = solve(A,b)
 
 # plot solution
 plt.plot(x,V@u_hat)
+plt.show()
 
 
 

@@ -328,7 +328,7 @@ if __name__ == "__main__":
     # Setup Vandermonde matrices on larger domain
     x = np.linspace(-1.4,1.4,100)
     Vm = get_extended_vandermonde(x,N+1)
-    
+     
     plt.figure()
     plt.plot(x,Vm@vk_approx,".-",label=r"$\tilde{V} \ \hat{v}$")
     plt.plot(x,v_func(x),label=r"$\sin(\pi x)$")

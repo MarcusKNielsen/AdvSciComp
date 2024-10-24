@@ -105,7 +105,7 @@ def solve_Collocation(N,epsilon_values):
 
 
 #%%
-
+ 
 N = 32
 epsilon_values = np.array([0.1, 0.01, 0.001])
 
