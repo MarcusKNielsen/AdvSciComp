@@ -3,7 +3,7 @@ from numpy.linalg import inv,solve
 import matplotlib.pyplot as plt
 
 r1 = 1
-r2 = 3
+r2 = 2
 
 def g_exact(w,theta):
     r = (r2-r1)*(w+1)/2+r1
@@ -15,8 +15,8 @@ sys.path.append(r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandid
 import legendre as l
 import fourier as f
 
-Nw = 35
-Ntheta = 30
+Nw = 32
+Ntheta = 32
 w = l.nodes(Nw)          # r expressed in w
 theta = f.nodes(Ntheta)  # theta
 
@@ -48,8 +48,14 @@ b = b.ravel()
 r = ((r2-r1)*(X+1)/2 + r1).ravel()
 c = 2/(r2-r1)
 A = (c/r) * Dx + c**2 * Dx@Dx + (1/r)**2*(Dy@Dy)
-#A = (c**2/r) * Dx @ (r*Dx) + (1/r)**2*(Dy@Dy) # Alternative
 
+# Alternative
+#A1 = (c**2/r) * Dx @ (r*Dx) + (1/r)**2*(Dy@Dy) 
+
+# Another alternative
+#I = np.eye(Nw)
+#r = (r2-r1)*(w+1)/2 + r1
+#A = c * np.kron(I,np.diag(1/r)) * Dx + c**2 * Dx@Dx + np.kron(I,np.diag((1/r)**2))*(Dy@Dy)
 
 #%% Boundary conditions
 
@@ -99,3 +105,7 @@ plt.tight_layout()
 plt.show()
 
 
+plt.figure()
+plt.plot(w,U[16])
+plt.plot(w,U_exact[16])
+plt.show()
