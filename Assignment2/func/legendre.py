@@ -87,8 +87,11 @@ def vander(x,N=None,Normalize=True):
         Lxnxt =  (2*k+1)*Lnow+Lxpre
         
         if Normalize:
-            norm = np.sqrt(2/(2*(k+1)+1))
-        
+            if k+1 < N-1:
+                norm = np.sqrt(2/(2*(k+1)+1))
+            else:
+                norm = np.sqrt(2/(k+1))
+                
         V[:,k+1]  = Lnxt / norm
         Vx[:,k+1] = Lxnxt / norm
         Lpre = Lnow

@@ -15,8 +15,8 @@ sys.path.append(r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandid
 import legendre as l
 import fourier as f
 
-Nw = 50
-Ntheta = 50
+Nw = 32
+Ntheta = 32
 w = l.nodes(Nw)          # r expressed in w
 theta = f.nodes(Ntheta)  # theta
 

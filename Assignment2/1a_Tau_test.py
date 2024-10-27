@@ -5,8 +5,8 @@ import sys
 sys.path.insert(0,r"/home/max/Documents/DTU/AdvNumericalMethods/AdvSciComp/Assignment2/func")
 sys.path.insert(0,r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandidat\2_semester\Advanced nummerical\AdvSciComp\Assignment2\func")
 sys.path.append(r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandidat\2_semester\Advanced nummerical\AdvSciComp\Assignment2")
-import legendre
-import L2space
+from legendre import vander, nodes
+from L2space import discrete_inner_product
 
 def u_exact(x,epsilon):
     return (np.exp(-x / epsilon) + (x - 1) - np.exp(-1 / epsilon )*x) / (np.exp(-1 / epsilon) - 1)
@@ -52,11 +52,11 @@ def b_coefs(N,eps):
     return result
 
 # parameters
-N = 8
-eps = 1
+N = 32
+eps = 0.1
 
-x = legendre.nodes(N)
-V,Vx,w = legendre.vander(x,N)
+x = nodes(N)
+V,Vx,w = vander(x,Normalize=True)
 
 # Setup A matrix
 A = np.zeros([N,N])
@@ -71,7 +71,7 @@ A[1] = b_coefs(N,eps)
 # three term part
 for n in range(2,N-2):
     A[n,n-1] = 1/(2*eps*(2*n-1))
-    A[n,n]   = 1#2*eps
+    A[n,n]   = 1
     A[n,n+1] = -1/(2*eps*(2*n+3))
 
 # boundary condition
@@ -79,7 +79,7 @@ A[-2] = V[0]
 A[-1] = V[-1]
 
 # Compute hat_f_0
-hat_f_0 = L2space.discrete_inner_product(np.ones(N),V[:,0],w)
+hat_f_0 = discrete_inner_product(np.ones(N),V[:,0],w)/2
 
 
 # Setup right hand side
@@ -92,8 +92,9 @@ u_hat = solve(A,b)
 
 x_lin = np.linspace(-1,1,100)
 # plot solution
-plt.plot(x,V@u_hat)
-plt.plot(x_lin,u_exact((x_lin+1)/2,eps))
+plt.plot(x,V@u_hat,".-",label="approx")
+plt.plot(x_lin,u_exact((x_lin+1)/2,eps),label="exact")
+plt.legend()
 plt.show()
 
 
