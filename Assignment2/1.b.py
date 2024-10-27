@@ -15,8 +15,8 @@ sys.path.append(r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandid
 import legendre as l
 import fourier as f
 
-Nw = 32
-Ntheta = 32
+Nw = 50
+Ntheta = 50
 w = l.nodes(Nw)          # r expressed in w
 theta = f.nodes(Ntheta)  # theta
 
@@ -47,7 +47,7 @@ b = b.ravel()
 # Laplacian Operator with boundary condition
 r = ((r2-r1)*(X+1)/2 + r1).ravel()
 c = 2/(r2-r1)
-A = (c/r) * Dx + c**2 * Dx@Dx + (1/r)**2*(Dy@Dy)
+A = (2/(r2-r1))*((1/r)*Dx+2/(r2-r1)*Dx@Dx)+1/(r**2)*Dy@Dy #(c*(1/r)) * Dx + c**2 * Dx@Dx + (1/r**2)*(Dy@Dy)
 
 # Alternative
 #A1 = (c**2/r) * Dx @ (r*Dx) + (1/r)**2*(Dy@Dy) 
@@ -63,8 +63,8 @@ A = (c/r) * Dx + c**2 * Dx@Dx + (1/r)**2*(Dy@Dy)
 bc_idx = bc_idx_x * Nw + bc_idx_y # This should be correct now (compare with b1 = b.ravel())
 
 # Inserting BC     
-A[bc_idx] = 0.0
-A[bc_idx,bc_idx] = 1.0
+A[bc_idx] = 0.0 # All set to 0
+A[bc_idx,bc_idx] = 1.0  # Change the specific index to 1
 
 # Solve linear system
 U = solve(A,b)
@@ -102,10 +102,13 @@ fig.colorbar(im3, ax=axes[2])
 
 # Display the plot
 plt.tight_layout()
+
+#%% Convergence test
+
+N_list = np.arange(5,30)
+error = []
+
+
 plt.show()
 
 
-plt.figure()
-plt.plot(w,U[16])
-plt.plot(w,U_exact[16])
-plt.show()

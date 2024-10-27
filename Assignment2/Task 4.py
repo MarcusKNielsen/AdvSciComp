@@ -12,35 +12,6 @@ def u_exact(x):
 
 f = lambda x: np.pi**2*np.sin(np.pi*x)
 
-def JacobiP(x,alpha,beta,N):
-
-    if x.size > 1:
-        J_nm2 = np.ones(len(x)) # J_{n-2}
-    else:
-        J_nm2 = 1
-    J_nm1 = 1/2*(alpha-beta+(alpha+beta+2)*x) # J_{n-1}
-
-    if N==0:
-        return J_nm2
-    elif N==1:
-        return J_nm1
-
-    for n in range(1,N):
-
-        # Computing the recursive coefficients
-        anm2  = 2*(n+alpha)*(n+beta)/( (2*n+alpha+beta+1)*(2*n+alpha+beta) )
-        anm1  = (alpha**2-beta**2)/( (2*n+alpha+beta+2)*(2*n+alpha+beta) )
-        an    = 2*(n+1)*(n+beta+alpha+1)/( (2*n+alpha+beta+2)*(2*n+alpha+beta+1) )
-
-        # Computing
-        J_n = ( (anm1 + x )*J_nm1 - anm2*J_nm2 ) / an
-
-        # Updating step
-        J_nm2 = J_nm1
-        J_nm1 = J_n
-    
-    return J_n
-
 def get_extended_vandermonde(x,N):
     K = len(x)
     Vm = np.zeros([K,N])
@@ -48,9 +19,9 @@ def get_extended_vandermonde(x,N):
         Vm[:,j] = JacobiP(x,alpha=0,beta=0,N=j)
     return Vm
 
-def BC(A,b,D,BC_method):
+def BC(A,b,D,BC_method,condA=False,d=0):
 
-    if BC_method == strong:
+    if BC_method == "strong":
         A[0] = 0
         A[-1] = 0
         A[0,0] = 1 
@@ -59,18 +30,33 @@ def BC(A,b,D,BC_method):
         b[0] = u_exact(-1)
         b[-1] = u_exact(1)
 
-    elif BC_method == week:
+    elif BC_method == "week":
         A[0,0] += tau 
         A[-1,-1] += tau 
         A[0] += D[0]
         A[-1] -= D[-1]
 
         b[0] += tau*u_exact(-1)
-        b[-1] += tau*u_exact(1) 
-    
-    return A,b
+        b[-1] += tau*u_exact(1)
 
-def construct_system(N):
+    elif BC_method == "week_SH":
+
+        A[0,0] += tau
+        A[-1,-1] += tau
+        A[0] += D[0]
+        A[-1] -= D[-1]
+
+        b[0] += tau*u_exact(-1)
+        b[-1] += tau*u_exact(1)
+    
+    condA_val = np.linalg.cond(A)
+
+    if condA:
+        return A,b,condA_val
+    else:
+        return A,b
+
+def construct_system(N,condA=False):
     # Magic nodes
     x_GL = legendre.nodes(N)
 
@@ -87,39 +73,48 @@ def construct_system(N):
 
     return A,b,D,x_GL,V
 
-def Shifted_BC(d,BC_method,N=20):
+def Shifted_BC(d,BC_method,N=20,condA=False):
 
     A,b,D,x_GL,V = construct_system(N)
-    A,b = BC(A,b,D,BC_method=BC_method)
+    A,b = BC(A,b,D,BC_method=BC_method,d=d)
     u_weak = np.linalg.solve(A,b)
 
-    x_lin = np.linspace(-1-d,1+d,100)
+    x_lin = np.linspace(-1-d,1+d,100) 
     V_ext,_,_ = legendre.vander(x_lin,N)
 
     u_sol = V_ext@np.linalg.inv(V)@u_weak
 
-    return u_sol,x_lin 
+    condA_val = np.linalg.cond(A)
+
+    if condA:
+        return u_sol,x_lin,condA_val
+    else:
+        return u_sol,x_lin
 
 N=30
 N_list = np.arange(10,N,2)
 
-strong,week = True,False
 tau = 1
 
 error_weak = []
 error_strong = []
 
+condA_week_list = []
+condA_strong_list = []
+
 for n in N_list:
 
     # Weak 
     A,b,D,x_GL,V = construct_system(n)
-    A,b = BC(A,b,D,BC_method=week)
+    A,b,condA_week = BC(A,b,D,BC_method="week",condA=True)
     u_weak = np.linalg.solve(A,b)
     # Strong
     A,b,D,x_GL,V = construct_system(n)
-    A,b = BC(A,b,D,BC_method=strong)
+    A,b,condA_strong = BC(A,b,D,BC_method="strong",condA=True)
     u_strong = np.linalg.solve(A,b)
 
+    condA_week_list.append(condA_week)
+    condA_strong_list.append(condA_strong)
     error_weak.append(np.max(np.abs(u_weak-u_exact(x_GL))))
     error_strong.append(np.max(np.abs(u_strong-u_exact(x_GL))))
 
@@ -133,19 +128,24 @@ plt.legend()
 
 # Weak
 A,b,D,x_GL,V = construct_system(N=6)
-A,b = BC(A,b,D,BC_method=week)
+A,b = BC(A,b,D,BC_method="week")
 u_weak = np.linalg.solve(A,b)
 
 # Strong
 A,b,D,x_GL,V = construct_system(N=6)
-A,b = BC(A,b,D,BC_method=strong)
+A,b = BC(A,b,D,BC_method="strong")
 u_strong = np.linalg.solve(A,b)
 
 # Linspace
 x_lin = np.linspace(-1,1,100)
+
+# Interpolation 
+V_ext,_,_ = legendre.vander(x_lin,N=6)
+
+# Plot
 plt.figure()
-plt.plot(x_GL,u_weak,label="Weak-CBM")
-plt.plot(x_GL,u_strong,label="Strong-CBM")
+plt.plot(x_lin,V_ext@np.linalg.inv(V)@u_weak,label="Weak-CBM")
+plt.plot(x_lin,V_ext@np.linalg.inv(V)@u_strong,label="Strong-CBM")
 plt.plot(x_lin,u_exact(x_lin),label="$u_{exact}$")
 plt.legend()
 plt.xlabel("x")
@@ -153,7 +153,7 @@ plt.xlabel("x")
 
 #%% Shifted boundary 
 
-u_shifted,x_lin = Shifted_BC(0.5,week)
+u_shifted,x_lin = Shifted_BC(0.5,"week_SH")
 
 # test figure
 plt.figure()
@@ -175,7 +175,7 @@ for d in d_list:
     for n in N_list:
 
         # Weak 
-        u_shifted,x_lin = Shifted_BC(d,week,N=n)
+        u_shifted,x_lin = Shifted_BC(d,"week_SH",N=n)
 
         error_shifted.append(np.max(np.abs(u_shifted-u_exact(x_lin))))
     
@@ -189,25 +189,34 @@ plt.xlabel("N")
 
 d_list = np.array([0.5,0.25,0,-0.25,-0.5])
 
-plt.figure()
+fig, axs = plt.subplots(1, 2, figsize=(10, 8))
 for d in d_list:
 
     error_shifted = []
+    condA_shifted_list = []
 
     for n in N_list:
 
         # Weak 
-        u_shifted,x_lin = Shifted_BC(d,week,N=n)
+        u_shifted,x_lin,condA = Shifted_BC(d,"week",N=n,condA=True)
 
+        condA_shifted_list.append(condA)
         error_shifted.append(np.max(np.abs(u_shifted-u_exact(x_lin))))
     
     # Plotting for each d
-    plt.loglog(N_list,error_shifted,"-o",label=f"Weak-SBM, d={d}")
+    axs[0].loglog(N_list,error_shifted,"-o",label=f"Weak-SBM, d={d}")
+    axs[1].loglog(N_list,condA_shifted_list,"-o",label=f"Weak-SBM, d={d}")
 
-plt.loglog(N_list,error_weak,"-o",label="Weak-CBM")
-plt.loglog(N_list,error_strong,"-o",label="Strong-CBM")
-plt.legend()
-plt.xlabel("N")
+axs[0].loglog(N_list,error_weak,"-o",label="Weak-CBM")
+axs[0].loglog(N_list,error_strong,"-o",label="Strong-CBM")
+axs[0].legend()
+axs[0].set_xlabel("N")
+
+axs[1].loglog(N_list,condA_week_list,"-o",label="Weak-CBM")
+axs[1].loglog(N_list,condA_strong_list,"-o",label="Stong-CBM")
+axs[1].set_xlabel("N")
+axs[1].set_ylabel("Cond(A)")
+
 plt.show()
 
 

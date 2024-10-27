@@ -1,3 +1,5 @@
+
+#%%
 import numpy as np
 import sys
 sys.path.insert(0,r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandidat\2_semester\Advanced nummerical\AdvSciComp\Assignment2\func")
@@ -6,6 +8,8 @@ import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 from scipy.stats import norm
 from L2space import discrete_inner_product
+from scipy.fft import fft, ifft, fftfreq
+import scipy
 
 def compute_L2_error(numerical, exact, weights):
     return np.sqrt(discrete_inner_product(numerical - exact, numerical - exact, weights))
@@ -13,56 +17,60 @@ def compute_L2_error(numerical, exact, weights):
 
 #%% Opgave c)
 
-N = 50
-x = nodes(N)
-
-x1 = 20
-x2 = 20
-
-D = diff_matrix(N)
-D3 = D@D@D
-a = 2*np.pi/(x1+x2)
-
-def f(t,u,D,D3):
+def f(t,u,D,D3,x1=20,x2=20):
+    a = 2*np.pi/(x1+x2)
     return -6*a*u*D@u - a**3 * D3@u
 
-x0 = np.pi
-
-def u_exact(w,t,c,w0):
+def u_exact2(w,t,c,w0,x1=20,x2=20):
+    a = 2*np.pi/(x1+x2)
     x  = w*(x1+x2)/(2*np.pi) - x1
     x0 = w0*(x1+x2)/(2*np.pi) - x1
     return 0.5*c*1/(np.cosh(0.5*np.sqrt(c)*(x-c*t-x0)))**2
 
+def u_exact(x,t,c,x0,x1=20,x2=20):
+    a = 2*np.pi/(x1+x2)
+    return 0.5*c*1/(np.cosh(0.5*np.sqrt(c)*(x-c*t-x0)))**2
+
+def u_exact3(x,t,c,x0,x1=20,x2=20):
+    a = 2*np.pi/(x1+x2)
+    w  = 2*np.pi*(x+x1)/(x1+x2)
+    w0 = 2*np.pi*(x0+x1)/(x1+x2)
+    return 0.5*c*1/(np.cosh(0.5*np.sqrt(c)*(w-c*t-w0)))**2
+
 #%% Convergence test:
 # Set up different values for N (number of grid points)
-N_values = [10,20,25,30,35,40,45,50]
+N_values = np.arange(4,30,2)
 errors = []
 
 # Constants
 c_value = 0.25
-tf = 1.0
-alpha = 0.5
+tf = 1e-8
+alpha = 0.01
 x1, x2 = 20, 20
-x0 = np.pi
+w0 = np.pi
 
 for N in N_values:
     # Grid points and differentiation matrices
-    x = nodes(N)
+    w = nodes(N)
     D = diff_matrix(N)
     D3 = D @ D @ D
     a = 2 * np.pi / (x1 + x2)
 
     # Initial condition
+    x  = w*(x1+x2)/(2*np.pi) - x1
+    x0 = w0*(x1+x2)/(2*np.pi) - x1
     u0 = u_exact(x, 0, c_value, x0)
 
     # Time integration
-    max_step = alpha * 1.73 * 8 / (N**3 * a**3)
+    max_step = 1e-10#alpha * 1.73 * 8 / (N**3 * a**3)
     sol = solve_ivp(f, [0, tf], u0, args=(D, D3), max_step=max_step,dense_output=True, method="RK23")
     
-    # Extract solution at final time
+    # Extract solution at final time 
     U_approx = sol.y[:, -1]
 
     # Exact solution at final time
+    x  = w*(x1+x2)/(2*np.pi) - x1
+    x0 = w0*(x1+x2)/(2*np.pi) - x1
     U_exact = u_exact(x, tf, c_value, x0)
 
     # Compute the L2 error
@@ -73,14 +81,23 @@ plt.figure()
 plt.loglog(N_values,errors)
 
 
+
 #%% Opgave d)
-N = 10
+N = 40
+w = nodes(N)
+D = diff_matrix(N)
+D3 = D @ D @ D
+x1, x2 = 20, 20
+a = 2 * np.pi / (x1 + x2)
+
 c = np.array([0.25,0.5,1])
 
-alpha = 0.9
+alpha = 0.01
 max_step = alpha * 1.73*8/(N**3*a**3)
 
 for c_i in c:
+    x  = w*(x1+x2)/(2*np.pi) - x1
+    x0 = w0*(x1+x2)/(2*np.pi) - x1
     u0 = u_exact(x,0,c_i,x0)
     tf = 1.0
     sol = solve_ivp(f,[0, tf],u0,args=(D,D3),max_step=max_step,dense_output=True,method="RK23")
@@ -93,12 +110,14 @@ for c_i in c:
     plt.pcolormesh(T,X,U)
     plt.xlabel("t: time")
     plt.ylabel("x: space")
-    plt.title("Diffusion Equation")
+    plt.title(f"Diffusion Equation: c={c_i}")
 
     plt.figure()
     plt.plot(x,U[0],".-",label=r"$u(x,0) (Approx)$")
     plt.plot(x,U[-1],".-",label=r"$u(x,T)$ (Approx)")
     plt.plot(x,u_exact(x,tf,c_i,x0),"--",label=r"$u(x,T)$ (Exact)")
+    plt.plot(x,u_exact(x,0,c_i,x0),"--",label=r"$u(x,0)$ (Exact)")
+    plt.title(f"c={c_i}")
     plt.legend()
 
     int_M_test = np.zeros(len(t))
@@ -108,53 +127,141 @@ for c_i in c:
     Linf_error = np.zeros(len(t)) # Linf-norm error over time
     
     for i in range(len(t)):
-        w = np.ones_like(x)*2*np.pi/N
-        int_M_test[i] = discrete_inner_product(np.ones_like(U[i]),U[i],w)
-        int_V_test[i] = discrete_inner_product(U[i],U[i],w)
-        int_E_term1   = discrete_inner_product(D@U[i],D@U[i],w)
-        int_E_term2   = discrete_inner_product(U[i],U[i]*U[i],w)
+        weight = np.ones_like(x)*2*np.pi/N
+        int_M_test[i] = discrete_inner_product(np.ones_like(U[i]),U[i],weight)
+        int_V_test[i] = discrete_inner_product(U[i],U[i],weight)
+        int_E_term1   = discrete_inner_product(D@U[i],D@U[i],weight)
+        int_E_term2   = discrete_inner_product(U[i],U[i]*U[i],weight)
         int_E_test[i] = 0.5*int_E_term1 - int_E_term2
 
         # Numerical solution at time t[i]
         U_approx = U[i]
         
         # Exact solution at time t[i]
+        x  = w*(x1+x2)/(2*np.pi) - x1
+        x0 = w0*(x1+x2)/(2*np.pi) - x1
         U_exact = u_exact(x, t[i], c_i, x0)
         
         # Compute L2 norm of the error
-        L2_error[i] = np.sqrt(discrete_inner_product(U_approx - U_exact, U_approx - U_exact, w))
+        L2_error[i] = np.sqrt(discrete_inner_product(U_approx - U_exact, U_approx - U_exact, weight))
         
         # Compute Linf norm of the error (max absolute error)
         Linf_error[i] = np.max(np.abs(U_approx - U_exact))
     
+    
     plt.figure()
-    plt.plot(t,int_M_test,label=r"$\int u(x,t) dx$")
-    plt.plot(t,int_V_test,label=r"$\int u(x,t)^2 dx$")
-    plt.plot(t,int_E_test,label=r"$\int \frac{1}{2}u_x(x,t)^2 - u^3 dx$")
+    plt.plot(t,int_M_test,label=r"M= $\int u(x,t) dx$")
+    plt.plot(t,int_V_test,label=r"V= $\int u(x,t)^2 dx$")
+    plt.plot(t,int_E_test,label=r"E= $\int \frac{1}{2}u_x(x,t)^2 - u^3 dx$")
+    plt.title(f"Mass (M), Momentum (V), Energy (E), for c={c_i}")
     plt.xlabel("t")
     plt.legend()
-
+    
     # Plot the L2 norm error evolution over time
     plt.figure()
     plt.plot(t, L2_error, label=r"$\|u - \mathcal{I}_N u\|_{L_2}$")
     plt.xlabel('Time (t)')
     plt.ylabel(r"$L_2$-norm Error")
-    plt.title(r'Evolution of $L_2$ Error')
+    plt.title(f'Evolution of $L_2$ Error for c={c_i}')
     plt.legend()
     plt.grid(True)
+    
 
     # Plot the Linf norm error evolution over time
     plt.figure()
     plt.plot(t, Linf_error, label=r"$\|u - \mathcal{I}_N u\|_{L_\infty}$", color="red")
     plt.xlabel('Time (t)')
     plt.ylabel(r"$L_\infty$-norm Error")
-    plt.title(r'Evolution of $L_\infty$ Error')
+    plt.title(f'Evolution of $L_\infty$ Error for c={c_i}')
     plt.legend()
     plt.grid(True)
+    
 
+
+#%% e) Aliasing errors
+N = 40
+w = nodes(N)
+D = diff_matrix(N)
+D3 = D @ D @ D
+x1, x2 = 20, 20
+a = 2 * np.pi / (x1 + x2)
+alpha = 0.01
+max_step = alpha * 1.73*8/(N**3*a**3)
+x_lin = nodes(500)
+N1 = len(x)
+N2 = len(x_lin)
+
+for c_i in c:
+
+    x  = w*(x1+x2)/(2*np.pi) - x1
+    x0 = w0*(x1+x2)/(2*np.pi) - x1
+    u0 = u_exact(x,0,c_i,x0)
+    tf = 1.0
+    sol = solve_ivp(f,[0, tf],u0,args=(D,D3),max_step=max_step,dense_output=True,method="RK23")
+    U_approx = sol.y[:, -1]
+
+    uk_approx = fft(U_approx)
+    uk_exact = fft(u_exact(x_lin,tf,c_i,x0))[int(len(x_lin)/2-N):int(len(x_lin)/2+N)]
+
+    uk1 = scipy.fft.fft(uk_approx)
+    dx1 = (x[1:] - x[:-1])[0]
+    freq1 = scipy.fft.fftfreq(N1, d=dx1)
+
+    uk2 = scipy.fft.fft(uk_exact)
+    dx2 = (x_lin[1:] - x_lin[:-1])[0]
+    freq2 = scipy.fft.fftfreq(N2, d=dx2)
+
+    uk = np.zeros_like(uk1)
+    uk[:N1//2] = uk2[:N1//2]
+    uk[N1//2:] = uk2[N1+N1//2:]
+
+    plt.figure()
+    plt.plot(freq1,np.abs(uk1.real),".",label=f"grid points: {N1}")
+    plt.plot(freq1,np.abs(uk.real),".",label=f"grid points: {N2}")
+    plt.ylabel(r"$|u_k|$")
+    plt.xlabel(r"$k$")
+    plt.title(f"c={c_i}")
+    plt.legend()
+    
+
+
+
+#%% f)
+
+# Constants
+N = 100
+c_value1 = 0.25
+c_value2 = 0.5
+tf = 40.0
+alpha = 0.01
+x0_1 = -15
+x0_2 = -40
+x1 = 45
+x2 = 30
+w = nodes(N)
+D = diff_matrix(N)
+D3 = D @ D @ D
+a = 2 * np.pi / (x1 + x2)
+
+# Initial condition
+x  = w*(x1+x2)/(2*np.pi) - x1
+u0 = u_exact(x, 0, c_value1, x0_1)+u_exact(x, 0, c_value2, x0_2)
+
+# Time integration
+max_step = 0.1 #alpha * 1.73 * 8 / (N**3 * a**3)
+sol = solve_ivp(f, [0, tf], u0, args=(D, D3), max_step=max_step,dense_output=True, method="RK23")
+
+t = sol.t
+U = sol.y.T
+
+plt.figure()
+X,T = np.meshgrid(x,t)
+
+plt.pcolormesh(T,X,U)
+plt.xlabel("t: time")
+plt.ylabel("x: space")
+plt.title(f"Diffusion Equation")
 
 plt.show()
-
-
 
 
