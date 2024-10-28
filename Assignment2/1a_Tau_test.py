@@ -6,11 +6,9 @@ sys.path.insert(0,r"/home/max/Documents/DTU/AdvNumericalMethods/AdvSciComp/Assig
 sys.path.insert(0,r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandidat\2_semester\Advanced nummerical\AdvSciComp\Assignment2\func")
 sys.path.append(r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandidat\2_semester\Advanced nummerical\AdvSciComp\Assignment2")
 from legendre import vander, nodes
-from L2space import discrete_inner_product
 
 def u_exact(x,epsilon):
     return (np.exp(-x / epsilon) + (x - 1) - np.exp(-1 / epsilon )*x) / (np.exp(-1 / epsilon) - 1)
-
 
 def a_coefs(N,eps):
 
@@ -26,7 +24,7 @@ def a_coefs(N,eps):
     result[even_condition] = -2 * eps * n_even * (n_even + 1)
 
     # p odd
-    odd_condition = n % 2 != 0
+    odd_condition = (n % 2 != 0)
     result[odd_condition] = -2
     
     return result
@@ -52,15 +50,14 @@ def b_coefs(N,eps):
     return result
 
 # parameters
-N = 32
-eps = 0.1
+N = 100
+eps = 0.001
 
 x = nodes(N)
-V,Vx,w = vander(x,Normalize=True)
+V,Vx,w = vander(x,Normalize=False)
 
 # Setup A matrix
 A = np.zeros([N,N])
-
 
 # The n=0 equation
 A[0] = a_coefs(N,eps)
@@ -79,8 +76,7 @@ A[-2] = V[0]
 A[-1] = V[-1]
 
 # Compute hat_f_0
-hat_f_0 = discrete_inner_product(np.ones(N),V[:,0],w)/2
-
+hat_f_0 = 1
 
 # Setup right hand side
 b = np.zeros(N)
@@ -90,7 +86,7 @@ b[2] = -hat_f_0/(12*eps)
 # solve for coefficients
 u_hat = solve(A,b)
 
-x_lin = np.linspace(-1,1,100)
+x_lin = np.linspace(-1,1,1000)
 # plot solution
 plt.plot(x,V@u_hat,".-",label="approx")
 plt.plot(x_lin,u_exact((x_lin+1)/2,eps),label="exact")

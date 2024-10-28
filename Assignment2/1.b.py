@@ -21,7 +21,7 @@ w = l.nodes(Nw)          # r expressed in w
 theta = f.nodes(Ntheta)  # theta
 
 # r variable
-Vander_w,Vw,_ = l.vander(w)
+Vander_w,Vw,_ = l.vander(w, Normalize=False)
 D_w     = Vw @ inv(Vander_w)    # Computing differentiation matrix
 D_theta = f.diff_matrix(Ntheta) # Computing differentiation matrix directly
 

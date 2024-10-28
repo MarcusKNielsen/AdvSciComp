@@ -3,7 +3,7 @@ from numpy.linalg import inv,solve
 import matplotlib.pyplot as plt
 
 r1 = 1
-r2 = 3
+r2 = 2
 
 def u_exact(x,y):
     r = (r2-r1)*(x+1)/2+r1
@@ -15,7 +15,7 @@ def u_exact(x,y):
 #sys.path.append(r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandidat\2_semester\Advanced nummerical\AdvSciComp\Assignment2")
 from legendre import vander, nodes
 
-N = 50
+N = 32
 x = nodes(N)
 V,Vx,_ = vander(x)
 D = Vx @ inv(V)
@@ -45,7 +45,8 @@ b = b.ravel()
 # Laplacian Operator with boundary condition
 r = ((r2-r1)*(X+1)/2+r1).ravel()
 c = 2/(r2-r1)
-A = (c/r) * Dx + c**2 * Dx@Dx + (1/np.pi*r)**2*(Dy@Dy)
+A = (c/r) * Dx +  c**2 * Dx@Dx + (1/r**2)*(Dy@Dy) 
+#A = np.kron(c/r,I) * Dx +  c**2 * Dx@Dx + np.kron(1/r**2,I)*(Dy@Dy)
 
 A[bc_idx] = 0
 A[bc_idx,bc_idx] = 1
@@ -88,4 +89,7 @@ fig.colorbar(im3, ax=axes[2])
 plt.tight_layout()
 plt.show()
 
-
+plt.figure()
+plt.plot(x,U[16])
+plt.plot(x,U_exact[16])
+plt.show()
