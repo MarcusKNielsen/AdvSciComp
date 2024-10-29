@@ -42,12 +42,12 @@ def BC(A,b,D,BC_method,condA=False,d=0):
     elif BC_method == "week_SH":
 
         A[0,0] += tau
-        A[-1,-1] += tau
+        A[-1,-1] += tau 
         A[0] += D[0]
         A[-1] -= D[-1]
 
-        b[0] += tau*u_exact(-1)
-        b[-1] += tau*u_exact(1)
+        b[0] += tau*u_exact(-1-d)
+        b[-1] += tau*u_exact(1+d)
     
     condA_val = np.linalg.cond(A)
 

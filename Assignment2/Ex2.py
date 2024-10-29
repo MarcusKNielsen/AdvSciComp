@@ -14,12 +14,46 @@ import scipy
 def compute_L2_error(numerical, exact, weights):
     return np.sqrt(discrete_inner_product(numerical - exact, numerical - exact, weights))
 
+def Dealias(u, v, N, M):
+    
+    # Python Implementation of slide 23 Lecture_6_Nonlinear
+    
+    # FFT
+    uhat = fft(u)
+    vhat = fft(v)
+    
+    # Padding the uhat and vhat arrays
+    uhatpad = np.concatenate([uhat[:N//2], np.zeros(M - N), uhat[N//2:]])
+    vhatpad = np.concatenate([vhat[:N//2], np.zeros(M - N), vhat[N//2:]])
+    
+    # Inverse FFT to get upad and vpad
+    upad = ifft(uhatpad)
+    vpad = ifft(vhatpad)
+    
+    # Pointwise multiplication in physical space
+    wpad = upad * vpad
+    
+    # Forward FFT to get wpad_hat
+    wpad_hat = fft(wpad)
+    
+    # Dealiasing step
+    what = (M/N) * np.concatenate([wpad_hat[:N//2], wpad_hat[M - N//2:]])
+    
+    # Inverse FFT
+    w = ifft(what)
+    
+    return w.real
+
 
 #%% Opgave c)
 
 def f(t,u,D,D3,x1=20,x2=20):
     a = 2*np.pi/(x1+x2)
     return -6*a*u*D@u - a**3 * D3@u
+
+def f_alias_free(t,u,D,D3,a,N,M):
+    w = Dealias(u, D@u, N, M)
+    return -6*a*w - a**3 * D3@u
 
 def u_exact2(w,t,c,w0,x1=20,x2=20):
     a = 2*np.pi/(x1+x2)
@@ -37,19 +71,26 @@ def u_exact3(x,t,c,x0,x1=20,x2=20):
     w0 = 2*np.pi*(x0+x1)/(x1+x2)
     return 0.5*c*1/(np.cosh(0.5*np.sqrt(c)*(w-c*t-w0)))**2
 
+
+alias = True
+
 #%% Convergence test:
 # Set up different values for N (number of grid points)
-N_values = np.arange(4,30,2)
+N_values = np.arange(4,50,6)
 errors = []
 
 # Constants
 c_value = 0.25
-tf = 1e-8
+tf = 1e-3
 alpha = 0.01
 x1, x2 = 20, 20
 w0 = np.pi
 
 for N in N_values:
+
+    # Fine grid (zero-padding)
+    M = 3*N//2
+
     # Grid points and differentiation matrices
     w = nodes(N)
     D = diff_matrix(N)
@@ -62,9 +103,13 @@ for N in N_values:
     u0 = u_exact(x, 0, c_value, x0)
 
     # Time integration
-    max_step = 1e-10#alpha * 1.73 * 8 / (N**3 * a**3)
-    sol = solve_ivp(f, [0, tf], u0, args=(D, D3), max_step=max_step,dense_output=True, method="RK23")
-    
+    max_step = 1e-6#alpha * 1.73 * 8 / (N**3 * a**3)
+
+    if alias:
+        sol = solve_ivp(f_alias_free,[0, tf],u0,args=(D,D3,a,N,M),max_step=max_step,dense_output=True,method="RK23")
+    else:
+        sol = solve_ivp(f, [0, tf], u0, args=(D, D3), max_step=max_step,dense_output=True, method="RK23")
+
     # Extract solution at final time 
     U_approx = sol.y[:, -1]
 
@@ -84,6 +129,8 @@ plt.loglog(N_values,errors)
 
 #%% Opgave d)
 N = 40
+# Fine grid (zero-padding)
+M = 3*N//2
 w = nodes(N)
 D = diff_matrix(N)
 D3 = D @ D @ D
@@ -100,7 +147,10 @@ for c_i in c:
     x0 = w0*(x1+x2)/(2*np.pi) - x1
     u0 = u_exact(x,0,c_i,x0)
     tf = 1.0
-    sol = solve_ivp(f,[0, tf],u0,args=(D,D3),max_step=max_step,dense_output=True,method="RK23")
+    if alias:
+        sol = solve_ivp(f_alias_free,[0, tf],u0,args=(D,D3,a,N,M),max_step=max_step,dense_output=True,method="RK23")
+    else:
+        sol = solve_ivp(f, [0, tf], u0, args=(D, D3), max_step=max_step,dense_output=True, method="RK23")
 
     t = sol.t
     U = sol.y.T
@@ -180,6 +230,8 @@ for c_i in c:
 
 #%% e) Aliasing errors
 N = 40
+# Fine grid (zero-padding)
+M = 3*N//2
 w = nodes(N)
 D = diff_matrix(N)
 D3 = D @ D @ D
@@ -197,7 +249,12 @@ for c_i in c:
     x0 = w0*(x1+x2)/(2*np.pi) - x1
     u0 = u_exact(x,0,c_i,x0)
     tf = 1.0
-    sol = solve_ivp(f,[0, tf],u0,args=(D,D3),max_step=max_step,dense_output=True,method="RK23")
+    
+    if alias:
+        sol = solve_ivp(f_alias_free,[0, tf],u0,args=(D,D3,a,N,M),max_step=max_step,dense_output=True,method="RK23")
+    else:
+        sol = solve_ivp(f, [0, tf], u0, args=(D, D3), max_step=max_step,dense_output=True, method="RK23")
+
     U_approx = sol.y[:, -1]
 
     uk_approx = fft(U_approx)
@@ -229,7 +286,9 @@ for c_i in c:
 #%% f)
 
 # Constants
-N = 100
+N = 50
+# Fine grid (zero-padding)
+M = 3*N//2
 c_value1 = 0.25
 c_value2 = 0.5
 tf = 40.0
@@ -249,7 +308,12 @@ u0 = u_exact(x, 0, c_value1, x0_1)+u_exact(x, 0, c_value2, x0_2)
 
 # Time integration
 max_step = 0.1 #alpha * 1.73 * 8 / (N**3 * a**3)
-sol = solve_ivp(f, [0, tf], u0, args=(D, D3), max_step=max_step,dense_output=True, method="RK23")
+
+if alias:
+    sol = solve_ivp(f_alias_free,[0, tf],u0,args=(D,D3,a,N,M),max_step=max_step,dense_output=True,method="RK23")
+else:
+    sol = solve_ivp(f, [0, tf], u0, args=(D, D3), max_step=max_step,dense_output=True, method="RK23")
+
 
 t = sol.t
 U = sol.y.T
