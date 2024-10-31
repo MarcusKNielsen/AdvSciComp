@@ -1,4 +1,6 @@
 import numpy as np
+import sys
+sys.path.insert(0,r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandidat\2_semester\Advanced nummerical\AdvSciComp\Assignment2\func")
 from fourier import nodes, diff_matrix
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp

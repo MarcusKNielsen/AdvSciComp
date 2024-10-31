@@ -1,91 +1,98 @@
 import numpy as np
+from numpy.linalg import solve
 import matplotlib.pyplot as plt
-from JacobiGL import JacobiGL
+import sys
+sys.path.insert(0,r"/home/max/Documents/DTU/AdvNumericalMethods/AdvSciComp/Assignment2/func")
+sys.path.insert(0,r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandidat\2_semester\Advanced nummerical\AdvSciComp\Assignment2\func")
+sys.path.append(r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kandidat\2_semester\Advanced nummerical\AdvSciComp\Assignment2")
+from legendre import vander, nodes
+from L2space import discrete_inner_product
 
-def discrete_inner_product(u,v,w):    
-    return np.sum(u*v*w)
+def u_exact(x,epsilon):
+    return (np.exp(-x / epsilon) + (x - 1) - np.exp(-1 / epsilon )*x) / (np.exp(-1 / epsilon) - 1)
 
-def discrete_L2_norm(u,w):
-    return np.sqrt(discrete_inner_product(u,u,w))
+def a_coefs(N,eps):
 
-def JacobiP(x,alpha,beta,N):
+    n = np.arange(N)
+    result = np.zeros_like(n, dtype=float)
 
-    if x.size > 1:
-        J_nm2 = np.ones(len(x)) # J_{n-2}
-    else:
-        J_nm2 = 1
-    J_nm1 = 1/2*(alpha-beta+(alpha+beta+2)*x) # J_{n-1}
+    # p = 0
+    result[n == 0] = 0
 
-    if N==0:
-        return J_nm2
-    elif N==1:
-        return J_nm1
+    # p even
+    even_condition = (n % 2 == 0) & (n != 0)
+    n_even = n[even_condition] # indices to multiply
+    result[even_condition] = -2 * eps * n_even * (n_even + 1)
 
-    for n in range(1,N):
-
-        # Computing the recursive coefficients
-        anm2  = 2*(n+alpha)*(n+beta)/( (2*n+alpha+beta+1)*(2*n+alpha+beta) )
-        anm1  = (alpha**2-beta**2)/( (2*n+alpha+beta+2)*(2*n+alpha+beta) )
-        an    = 2*(n+1)*(n+beta+alpha+1)/( (2*n+alpha+beta+2)*(2*n+alpha+beta+1) )
-
-        # Computing
-        J_n = ( (anm1 + x )*J_nm1 - anm2*J_nm2 ) / an
-
-        # Updating step
-        J_nm2 = J_nm1
-        J_nm1 = J_n
+    # p odd
+    odd_condition = (n % 2 != 0)
+    result[odd_condition] = -2
     
-    return J_n
+    return result
 
-def A_matrix(N,epsi):
+def b_coefs(N,eps):
 
-    A = np.zeros([N+2,N+2])
+    p = np.arange(N)
+    result = np.zeros_like(p, dtype=float)
 
-    for i in range(1,N+1):
-        
-        lower_diag  = -2/(2*i-1)
-        main_diag = -4*epsi*np.ones_like(i)
-        upper_diag = 2/(2*i+1)
+    # p = 0,1
+    result[p == 0] = 0
+    result[p == 1] = 0
 
-        ai = np.zeros(N+2)
+    # p even
+    p_even = (p % 2 == 0) & (p != 0)
+    result[p_even] = 1
 
-        ai[i-1] = lower_diag
-        ai[i] = main_diag
-        ai[i+1] = upper_diag
+    # p odd
+    p_odd = (p % 2 != 0) & (p != 1)
+    np_even = p[p_odd]
+    result[p_odd] = eps * (np_even * (np_even + 1) - 2)
     
-        A[i] = ai 
+    return result
 
+# parameters
+N = 100
+eps = 0.001
 
-    # Inserting boundary conditions:
-    # i = 0 and i = N+2
-    for j in range(N+2):
-        A[0,j] = JacobiP(np.array([-1]),alpha=0,beta=0,N=j)
-        A[-1,j] = JacobiP(np.array([1]),alpha=0,beta=0,N=j)
+x = nodes(N)
+V,Vx,w = vander(x,Normalize=False)
 
-    return A
+# Setup A matrix
+A = np.zeros([N,N])
 
-def f_RHS(N):
+# The n=0 equation
+A[0] = a_coefs(N,eps)
 
-    f = np.ones_like(N+2)
-    x_GL = JacobiGL(0,0,N+1)
-    N_weights = len(x_GL)
-    weights = 2/((N_weights-1)*N_weights)* 1/(JacobiP(x_GL,alpha=0,beta=0,N=N_weights-1)**2)
-    f_tilde = np.zeros(N+2)
-    
-    for j in range(1,N+1):
+# The n=1 equation
+A[1] = b_coefs(N,eps)
 
-        phi = JacobiP(x_GL,alpha=0,beta=0,N=j)
+# three term part
+for n in range(2,N-2):
+    A[n,n-1] = 1/(2*eps*(2*n-1))
+    A[n,n]   = 1
+    A[n,n+1] = -1/(2*eps*(2*n+3))
 
-        f_tilde[j] = discrete_inner_product(f,phi,weights)
-    
-    return f_tilde
+# boundary condition
+A[-2] = V[0]
+A[-1] = V[-1]
 
+# Compute hat_f_0
+hat_f_0 = 1
 
-A = A_matrix(3,0.1)
-f_tilde = f_RHS(10)
+# Setup right hand side
+b = np.zeros(N)
+b[0] =  hat_f_0
+b[2] = -hat_f_0/(12*eps)
 
-print(A)
+# solve for coefficients
+u_hat = solve(A,b)
 
+x_lin = np.linspace(-1,1,1000)
+# plot solution
+plt.plot(x,V@u_hat,".-",label="approx")
+plt.plot(x_lin,u_exact((x_lin+1)/2,eps),label="exact")
+plt.legend()
+plt.show()
 
 
 
