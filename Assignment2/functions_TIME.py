@@ -7,7 +7,7 @@ from fourier import nodes
 import matplotlib.pyplot as plt
 from L2space import discrete_inner_product
 from scipy.fft import fft, ifft
-
+ 
 def compute_L2_error(numerical, exact, weights):
     return np.sqrt(discrete_inner_product(numerical - exact, numerical - exact, weights))
 

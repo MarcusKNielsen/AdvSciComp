@@ -265,7 +265,7 @@ for c_i in c:
     freq1 = scipy.fft.fftfreq(N1, d=dx1)
 
     uk2 = scipy.fft.fft(uk_exact)
-    dx2 = (x_lin[1:] - x_lin[:-1])[0]
+    dx2 = (x_lin[1:] - x_lin[:-1])[0] 
     freq2 = scipy.fft.fftfreq(N2, d=dx2)
 
     uk = np.zeros_like(uk1)

@@ -20,6 +20,7 @@ D3 = D @ D @ D
 x1, x2 = 20, 20
 a = 2 * np.pi / (x1 + x2)
 w0 = np.pi 
+tf = 1.0
 
 c = np.array([0.25,0.5,1])
 
@@ -37,7 +38,6 @@ for c_i in c:
         x0 = w0*(x1+x2)/(2*np.pi) - x1
         u0 = functions.u_exact(x, 0, c_i, x0)
 
-    tf = 1.0
     if dealias:
         sol = solve_ivp(functions.f_alias_free,[0, tf],u0,args=(D,D3,a,N,M),max_step=max_step,dense_output=True,method="RK23")
     else:

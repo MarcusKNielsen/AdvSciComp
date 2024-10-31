@@ -49,7 +49,7 @@ for N in N_values:
     else:
         sol = solve_ivp(functions.f, [0, tf], u0, args=(D, D3), max_step=max_step,dense_output=True, method="RK23")
 
-    # Extract solution at final time 
+    # Extract solution at final time  
     U_approx = sol.y[:, -1]
 
     # Exact solution at final time
