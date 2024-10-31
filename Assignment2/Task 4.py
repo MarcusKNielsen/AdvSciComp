@@ -41,8 +41,29 @@ def BC(A,b,D,BC_method,condA=False,d=0):
 
     elif BC_method == "week_SH":
 
-        A[0,0] += tau
-        A[-1,-1] += tau 
+        # Interpolation matrix 
+        N = A.shape[0]
+
+        # None shifted grid
+        x_GL = legendre.nodes(N)
+        # None shifted vandermonde
+        V,_,_ = legendre.vander(x_GL)
+
+        # Shifted grid
+        x_GLa,x_GLb = x_GL,x_GL
+        x_GLa[0] = -1-d
+        x_GLb[-1] = 1+d
+
+        # Shifted vandermonde -1-d
+        V_ext_a,_,_ = legendre.vander(x_GLa)
+        Ia = V_ext_a@np.linalg.inv(V)
+
+        # Shifted vandermonde 1+d
+        V_ext_b,_,_ = legendre.vander(x_GLb)
+        Ib = V_ext_b@np.linalg.inv(V)
+
+        A[0] += tau*Ia[0]
+        A[-1] += tau*Ib[-1] 
         A[0] += D[0]
         A[-1] -= D[-1]
 
@@ -72,24 +93,6 @@ def construct_system(N,condA=False):
     b = M@f(x_GL)
 
     return A,b,D,x_GL,V
-
-def Shifted_BC(d,BC_method,N=20,condA=False):
-
-    A,b,D,x_GL,V = construct_system(N)
-    A,b = BC(A,b,D,BC_method=BC_method,d=d)
-    u_weak = np.linalg.solve(A,b)
-
-    x_lin = np.linspace(-1-d,1+d,100) 
-    V_ext,_,_ = legendre.vander(x_lin,N)
-
-    u_sol = V_ext@np.linalg.inv(V)@u_weak
-
-    condA_val = np.linalg.cond(A)
-
-    if condA:
-        return u_sol,x_lin,condA_val
-    else:
-        return u_sol,x_lin
 
 N=30
 N_list = np.arange(10,N,2)
@@ -153,12 +156,20 @@ plt.xlabel("x")
 
 #%% Shifted boundary 
 
-u_shifted,x_lin = Shifted_BC(0.5,"week_SH")
+d = 0.25
+A,b,D,x_GL,V = construct_system(N=20)
+A,b = BC(A,b,D,BC_method="week_SH",d=d)
+u_shifted = np.linalg.solve(A,b)
+x_GL =  legendre.nodes(20)
+
+x_lin = np.linspace(-1-d,1+d,100)
+V_ext,_,_ = legendre.vander(x_lin,N=20)
+I_ext = V_ext@np.linalg.inv(V)
 
 # test figure
 plt.figure()
-plt.plot(x_lin,u_shifted,label="Weak-SBM")
 plt.plot(x_lin,u_exact(x_lin),label="$u_{exact}$")
+plt.plot(x_lin,I_ext@u_shifted,'--',label="Weak-SBM")
 plt.legend()
 plt.xlabel("x")
 plt.title("Test of extended Vandermonde SBC")
@@ -175,9 +186,12 @@ for d in d_list:
     for n in N_list:
 
         # Weak 
-        u_shifted,x_lin = Shifted_BC(d,"week_SH",N=n)
+        A,b,D,x_GL,V = construct_system(n)
+        A,b = BC(A,b,D,BC_method="week_SH",d=d)
+        u_shifted = np.linalg.solve(A,b)
+        x_GL =  legendre.nodes(n)
 
-        error_shifted.append(np.max(np.abs(u_shifted-u_exact(x_lin))))
+        error_shifted.append(np.max(np.abs(u_shifted-u_exact(x_GL))))
     
     # Plotting for each d
     plt.loglog(N_list,error_shifted,"-o",label=f"Weak-SBM, d={d}")
@@ -198,10 +212,14 @@ for d in d_list:
     for n in N_list:
 
         # Weak 
-        u_shifted,x_lin,condA = Shifted_BC(d,"week",N=n,condA=True)
+        A,b,D,x_GL,V = construct_system(n)
+        A,b,condA = BC(A,b,D,BC_method="week_SH",condA=True,d=d)
+        u_shifted = np.linalg.solve(A,b)
+
+        x_GL =  legendre.nodes(n)
 
         condA_shifted_list.append(condA)
-        error_shifted.append(np.max(np.abs(u_shifted-u_exact(x_lin))))
+        error_shifted.append(np.max(np.abs(u_shifted-u_exact(x_GL))))
     
     # Plotting for each d
     axs[0].loglog(N_list,error_shifted,"-o",label=f"Weak-SBM, d={d}")
