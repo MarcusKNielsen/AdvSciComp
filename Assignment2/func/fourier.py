@@ -18,22 +18,6 @@ def diff_matrix(N):
                 else:
                     D[j,i] = 0.5*(-1)**(i+j)/np.sin(np.pi*(j-i)/N)
     return D
- 
-def diff_matrix2(N):
-
-    j_lin = np.arange(N)
-    xj = 2*np.pi*j_lin/N
-    Dh = lambda xj,x,N: np.where(
-        np.abs(x-xj) < 1e-12,
-        0,
-        (np.cos(N*(x - xj)/2)*np.cos(x/2 - xj/2)*N*np.sin(x/2 - xj/2) - np.sin(N*(x - xj)/2))/(2*np.sin(x/2 - xj/2)**2*N)
-    )
-
-    D = np.zeros([N,N])
-    for j in j_lin:
-        D[:,j] = Dh(xj[j],xj,N)
-    
-    return D#,Dh
 
 
 if __name__ == "__main__":

@@ -103,9 +103,13 @@ def solve_Collocation(N,epsilon_values):
     return u_solutions
 
 
-
 #%%
- 
+
+# Set font size, tick size, and dot size
+font_size = 16
+tick_size = 14
+dot_size = 12
+
 N = 32
 epsilon_values = np.array([0.1, 0.01, 0.001])
 
@@ -113,23 +117,23 @@ u_solutions = solve_Collocation(N, epsilon_values)
 x_GL = JacobiGL(0, 0, N)
 
 # Prepare the figure with a 2x2 grid of subplots
-fig, ax = plt.subplots(2, 2, figsize=(8, 8))
+fig, ax = plt.subplots(2, 2, figsize=(12, 8))
 x_lin = np.linspace(-1, 1, 1000)
 
 # Plot the solutions for each epsilon on the first three subplots
 for idx, eps in enumerate(epsilon_values):
     row, col = divmod(idx, 2)
-    ax[row, col].plot(x_lin, u_exact((x_lin+1)/2, eps), label="Exact")
-    ax[row, col].plot(x_GL, u_solutions[idx], ".", label=rf"Numerical")
+    ax[row, col].plot((x_lin+1)/2, u_exact((x_lin+1)/2, eps), label="Exact")
+    ax[row, col].plot((x_GL+1)/2, u_solutions[idx], ".", label=rf"Numerical", markersize=dot_size)
 
-    # Customize the subplot
-    ax[row, col].set_title(rf"Solution for $\varepsilon$={eps} with N={N}")
-    ax[row, col].legend()
-    ax[row, col].set_xlabel('x')
-    ax[row, col].set_ylabel('u(x)')
+    # Customize the subplot with font size and tick size
+    ax[row, col].set_title(rf"Solution for $\varepsilon$={eps} with N={N}", fontsize=font_size)
+    ax[row, col].legend(fontsize=font_size)
+    ax[row, col].set_xlabel('x', fontsize=font_size)
+    ax[row, col].set_ylabel('u(x)', fontsize=font_size)
+    ax[row, col].tick_params(axis='both', which='major', labelsize=tick_size)
 
 # Convergence plot in the last subplot
-#N_array = np.arange(10, 150, 5)
 N_array = np.logspace(np.log10(4), np.log10(200), num=50, dtype=int)
 N_array = np.unique(N_array)
 
@@ -148,16 +152,19 @@ for N_idx, N in enumerate(N_array):
     error_temp[N_idx] = np.max(np.abs(u_exact_mat_temp - u_solutions_temp), axis=1)
 
 # Plot the convergence in the last subplot (ax[1,1])
-ax[1, 1].set_title("Convergence Plot")
+ax[1, 1].set_title("Convergence Plot", fontsize=font_size)
 for i in range(3):
-    ax[1, 1].semilogy(N_array, error_temp[:, i], ".-", label=rf"$\epsilon$={epsilon_values[i]}")
-ax[1, 1].legend()
-ax[1, 1].set_xlabel('N')
-ax[1, 1].set_ylabel(r'$\Vert u - u_N \Vert$')
+    ax[1, 1].semilogy(N_array, error_temp[:, i], ".-", label=rf"$\epsilon$={epsilon_values[i]}", markersize=dot_size)
+ax[1, 1].legend(fontsize=font_size)
+ax[1, 1].set_xlabel('N', fontsize=font_size)
+ax[1, 1].set_ylabel(r'$\Vert u - u_N \Vert_{L^2}$', fontsize=font_size)
+ax[1, 1].tick_params(axis='both', which='major', labelsize=tick_size)
 
 # Adjust layout to prevent overlap
-plt.tight_layout(pad=2.0, w_pad=1.0, h_pad=2.5)
+plt.tight_layout(pad=2.0, w_pad=0.5, h_pad=2.5)
 
 # Show the plots
 plt.show()
+
+
 
