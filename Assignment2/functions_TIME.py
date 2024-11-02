@@ -86,7 +86,7 @@ if __name__ == "__main__":
     u0_new = ifft(u0_hat)
 
     plt.figure()
-    plt.plot(x_small,u0_new,label="u0 new")
+    plt.plot(x_small,u0_new.real,label="u0 new")
     plt.plot(x_large,u0,label="u0")
     plt.legend()
     plt.show()

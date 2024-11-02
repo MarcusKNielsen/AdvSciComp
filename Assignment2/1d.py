@@ -6,7 +6,8 @@ from fourier import nodes, diff_matrix
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 from L2space import discrete_inner_product
-import Assignment2.functions_TIME as functions
+#import Assignment2.functions_TIME as functions
+import functions_TIME as functions
 
 dealias = True
 

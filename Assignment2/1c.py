@@ -5,18 +5,21 @@ sys.path.insert(0,r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kand
 from fourier import nodes, diff_matrix
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
-import Assignment2.functions_TIME as functions
+#import Assignment2.functions_TIME as functions
+import functions_TIME as functions
+from L2space import discrete_L2_norm
 
-dealias = True
+dealias = False
 
 #%% Convergence test: 
 # Set up different values for N (number of grid points) 
-N_values = np.arange(4,50,6)
+N_max = 550
+N_values = np.arange(10,N_max,N_max//10)
 errors = []
 
 # Constants
 c_value = 1.0
-tf = 1.0
+tf =  1.0
 alpha = 0.01
 x1, x2 = 20, 20
 w0 = np.pi
@@ -42,7 +45,7 @@ for N in N_values:
         u0 = functions.u_exact(x, 0, c_value, x0)
     
     # Time integration
-    max_step = 1e-10#alpha * 1.73 * 8 / (N**3 * a**3)
+    max_step = 1e-4#alpha * 1.73 * 8 / (N**3 * a**3)
 
     if dealias:
         sol = solve_ivp(functions.f_alias_free,[0, tf],u0,args=(D,D3,a,N,M),max_step=max_step,dense_output=True,method="RK23")
@@ -58,12 +61,21 @@ for N in N_values:
     U_exact = functions.u_exact(x, tf, c_value, x0)
 
     # Compute the L2 error
-    error = np.max(np.abs(U_approx-U_exact))
+    #error = np.max(np.abs(U_approx-U_exact))
+    err = U_approx-U_exact
+    weights = np.ones_like(err)*2*np.pi/N
+    error = discrete_L2_norm(err,weights)
     errors.append(error)
 
 plt.figure()
-plt.loglog(N_values,errors)
-plt.xticks(np.arange(4,50,6))
-plt.yticks([1e-1,1e-3,1e-5,1e-7,1e-10])
-plt.minorticks_on()
+plt.semilogy(N_values,errors,".-",label=r"$\Vert u_N - u \Vert_{L^2}$")
+plt.xlabel(r"$N$")
+plt.ylabel("Error")
+plt.title("Convergence Plot")
+plt.legend()
 plt.show()
+
+
+
+
+
