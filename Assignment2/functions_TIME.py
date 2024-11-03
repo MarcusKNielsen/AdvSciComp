@@ -41,8 +41,7 @@ def Dealias(u, v, N, M):
     
     return w.real
 
-def f(t,u,D,D3,x1=20,x2=20):
-    a = 2*np.pi/(x1+x2)
+def f(t,u,D,D3,a):
     return -6*a*u*D@u - a**3 * D3@u
 
 def f_alias_free(t,u,D,D3,a,N,M):
@@ -50,7 +49,6 @@ def f_alias_free(t,u,D,D3,a,N,M):
     return -6*a*w - a**3 * D3@u
 
 def u_exact(x,t,c,x0,x1=20,x2=20):
-    a = 2*np.pi/(x1+x2)
     return 0.5*c*1/(np.cosh(0.5*np.sqrt(c)*(x-c*t-x0)))**2
 
 def dealias_IC(N,M,w0,x1,x2,c_value):

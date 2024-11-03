@@ -26,7 +26,6 @@ N1 = N
 w0 = np.pi
 x_lin = w_lin*(x1 + x2) / (2 * np.pi) - x1
 
-
 c = np.array([0.25, 0.5, 1])
 
 for c_i in c:
@@ -47,7 +46,7 @@ for c_i in c:
     if dealias:
         sol = solve_ivp(functions.f_alias_free, [0, tf], u0, args=(D, D3, a, N, M), max_step=max_step, dense_output=True, method="RK23")
     else:
-        sol = solve_ivp(functions.f, [0, tf], u0, args=(D, D3), max_step=max_step, dense_output=True, method="RK23")
+        sol = solve_ivp(functions.f, [0, tf], u0, args=(D, D3,a), max_step=max_step, dense_output=True, method="RK23")
 
     # Initialize arrays to store frequencies and Fourier transform magnitudes for both solutions
     uk_approx_magnitudes = np.zeros((len(sol.t), N1))
