@@ -6,7 +6,6 @@ from fourier import nodes, diff_matrix
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 from scipy.fft import fft
-import scipy
 import functions_TIME as functions
 
 dealias = False

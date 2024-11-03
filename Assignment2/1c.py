@@ -9,18 +9,18 @@ from scipy.integrate import solve_ivp
 import functions_TIME as functions
 from L2space import discrete_L2_norm
 
-dealias = False
+dealias = True
 
 #%% Convergence test: 
 # Set up different values for N (number of grid points) 
-N_max = 550
+N_max = 100
 N_values = np.arange(10,N_max,N_max//10)
 errors = []
 
-# Constants
-c_value = 1.0
+# Constants 
+c_value = 0.25
 tf =  1.0
-alpha = 0.01
+alpha = 0.5
 x1, x2 = 20, 20
 w0 = np.pi
 
@@ -45,7 +45,7 @@ for N in N_values:
         u0 = functions.u_exact(x, 0, c_value, x0)
     
     # Time integration
-    max_step = 1e-4#alpha * 1.73 * 8 / (N**3 * a**3)
+    max_step = alpha * 1.73 * 8 / (N**3 * a**3)
 
     if dealias:
         sol = solve_ivp(functions.f_alias_free,[0, tf],u0,args=(D,D3,a,N,M),max_step=max_step,dense_output=True,method="RK23")

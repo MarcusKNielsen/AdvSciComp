@@ -5,7 +5,7 @@ sys.path.insert(0,r"C:\Users\maria\OneDrive - Danmarks Tekniske Universitet\Kand
 from fourier import nodes, diff_matrix
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
-import Assignment2.functions_TIME as functions
+import functions_TIME as functions
 
 dealias = True
 
@@ -18,7 +18,7 @@ M = 3*N//2
 c_value1 = 0.25
 c_value2 = 0.5
 tf = 120.0
-alpha = 0.01
+alpha = 0.9
 x0_1 = -15
 x0_2 = -40
 x1 = 45
@@ -31,6 +31,7 @@ a = 2 * np.pi / (x1 + x2)
 # Initial condition
 x  = w*(x1+x2)/(2*np.pi) - x1
 
+# MANGLER DEALIAS IC HER
 u0 = functions.u_exact(x, 0, c_value1, x0_1)+functions.u_exact(x, 0, c_value2, x0_2)
 
 # Time integration
@@ -40,7 +41,6 @@ if dealias:
     sol = solve_ivp(functions.f_alias_free,[0, tf],u0,args=(D,D3,a,N,M),max_step=max_step,dense_output=True,method="RK23")
 else:
     sol = solve_ivp(functions.f, [0, tf], u0, args=(D, D3), max_step=max_step,dense_output=True, method="RK23")
-
 
 t = sol.t
 U = sol.y.T
