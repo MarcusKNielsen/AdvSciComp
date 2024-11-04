@@ -9,7 +9,7 @@ from scipy.integrate import solve_ivp
 import functions_TIME as functions
 from L2space import discrete_L2_norm
 
-dealias = False
+dealias = True
 
 #%% Convergence test: 
 # Set up different values for N (number of grid points) 
@@ -18,13 +18,14 @@ N_values = np.arange(10,N_max,4) #N_max//10
 errors = []
 
 # Constants 
-c_value = 0.1
+c_value = 0.25
 tf =  1.0
 alpha = 0.5
-x1, x2 = 40, 40
 w0 = np.pi
 
 for N in N_values:
+
+    x1, x2 = 40, 40
 
     # Fine grid (zero-padding) 
     M = 3*N//2 
@@ -61,7 +62,6 @@ for N in N_values:
     U_exact = functions.u_exact(x, tf, c_value, x0)
 
     # Compute the L2 error
-    #error = np.max(np.abs(U_approx-U_exact))
     err = U_approx-U_exact
     weights = np.ones_like(err)*2*np.pi/N
     error = discrete_L2_norm(err,weights)
@@ -70,8 +70,8 @@ for N in N_values:
 plt.figure()
 plt.semilogy(N_values,errors,".-",label=r"$\Vert u_N - u \Vert_{L^2}$")
 plt.xlabel(r"$N$")
-plt.ylabel("Error")
-plt.title("Convergence Plot")
+plt.ylabel(r"$e=\Vert u_N - u \Vert_{L^2}$")
+plt.title("Convergence Plot of solver (with aliasing error)")
 plt.legend()
 
 plt.show()

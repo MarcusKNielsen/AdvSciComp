@@ -10,9 +10,9 @@ import functions_TIME as functions
 
 dealias = False
 
-#%% e) Aliasing errors
+#%% e) Aliasing errors 
 N = 50
-M = 3*N//2  # Fine grid (zero-padding)
+M = 3*N//2  # Fine grid (zero-padding) 
 w = nodes(N)
 D = diff_matrix(N)
 D3 = D @ D @ D
