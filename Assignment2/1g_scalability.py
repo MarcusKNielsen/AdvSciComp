@@ -86,7 +86,7 @@ plt.semilogy(N_values,time_dealias,".-",label=r"de-alias")
 plt.semilogy(N_values,time_alias,".-",label=r"alias")
 plt.xlabel(r"$N$")
 plt.ylabel(r"time (s)")
-plt.title("Convergence plot of solver")
+plt.title("Scalability analysis of solver")
 plt.legend()
 
 plt.show()

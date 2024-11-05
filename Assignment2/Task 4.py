@@ -122,9 +122,10 @@ for n in N_list:
     error_strong.append(np.max(np.abs(u_strong-u_exact(x_GL))))
 
 plt.figure()
-plt.loglog(N_list,error_weak,"-o",label="Weak-CBM")
-plt.loglog(N_list,error_strong,"-o",label="Strong-CBM")
+plt.semilogy(N_list,error_weak,"-o",label="Weak-CBM")
+plt.semilogy(N_list,error_strong,"-o",label="Strong-CBM")
 plt.xlabel("N")
+plt.ylabel("Error")
 plt.legend()
 
 #%% Solution with N=6
@@ -194,10 +195,11 @@ for d in d_list:
         error_shifted.append(np.max(np.abs(u_shifted-u_exact(x_GL))))
     
     # Plotting for each d
-    plt.loglog(N_list,error_shifted,"-o",label=f"Weak-SBM, d={d}")
+    plt.semilogy(N_list,error_shifted,"-o",label=f"Weak-SBM, d={d}")
 
 plt.legend()
 plt.xlabel("N")
+plt.ylabel("Error")
 
 #%% All 7 convergence studies
 
@@ -222,16 +224,18 @@ for d in d_list:
         error_shifted.append(np.max(np.abs(u_shifted-u_exact(x_GL))))
     
     # Plotting for each d
-    axs[0].loglog(N_list,error_shifted,"-o",label=f"Weak-SBM, d={d}")
-    axs[1].loglog(N_list,condA_shifted_list,"-o",label=f"Weak-SBM, d={d}")
+    axs[0].semilogy(N_list,error_shifted,"-o",label=f"Weak-SBM, d={d}")
+    axs[1].semilogy(N_list,condA_shifted_list,"-o",label=f"Weak-SBM, d={d}")
 
-axs[0].loglog(N_list,error_weak,"-o",label="Weak-CBM")
-axs[0].loglog(N_list,error_strong,"-o",label="Strong-CBM")
+axs[0].semilogy(N_list,error_weak,"-o",label="Weak-CBM")
+axs[0].semilogy(N_list,error_strong,"-o",label="Strong-CBM")
 axs[0].legend()
 axs[0].set_xlabel("N")
+axs[0].set_ylabel("Error")
 
-axs[1].loglog(N_list,condA_week_list,"-o",label="Weak-CBM")
-axs[1].loglog(N_list,condA_strong_list,"-o",label="Stong-CBM")
+
+axs[1].semilogy(N_list,condA_week_list,"-o",label="Weak-CBM")
+axs[1].semilogy(N_list,condA_strong_list,"-o",label="Stong-CBM")
 axs[1].set_xlabel("N")
 axs[1].set_ylabel("Cond(A)")
 

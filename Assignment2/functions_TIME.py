@@ -42,7 +42,7 @@ def Dealias(u, v, N, M):
     return w.real
 
 def f(t,u,D,D3,a):
-    return -6*a*u*D@u - a**3 * D3@u
+    return -6*a*u*(D@u) - a**3 * D3@u
 
 def f_alias_free(t,u,D,D3,a,N,M):
     w = Dealias(u, D@u, N, M)
