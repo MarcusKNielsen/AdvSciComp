@@ -13,14 +13,14 @@ from time import perf_counter
 #%% Convergence test: 
 # Set up different values for N (number of grid points) 
 N_max = 500
-N_values = np.arange(10,N_max,10) #N_max//10
+N_values = np.arange(10,N_max,20) #N_max//10
 errors_alias = []
 errors_dealias = []
 time_alias = []
 time_dealias = []
 
 # Constants 
-c_value = 0.25
+c_value = 1.0
 tf =  1.0
 alpha = 0.5
 w0 = np.pi
@@ -74,21 +74,29 @@ for N in N_values:
     errors_dealias.append(error_dealias)
     errors_alias.append(error_alias)
 
-plt.figure()
-plt.semilogy(N_values,errors_dealias,".-",label=r"de-alias$")
-plt.semilogy(N_values,errors_alias,".-",label=r"alias$")
-plt.xlabel(r"$N$")
-plt.ylabel(r"$e=\Vert u_N - u \Vert_{L^2}$")
-plt.title("Convergence plot of solver")
-plt.legend()
-plt.figure()
-plt.semilogy(N_values,time_dealias,".-",label=r"de-alias")
-plt.semilogy(N_values,time_alias,".-",label=r"alias")
-plt.xlabel(r"$N$")
-plt.ylabel(r"time (s)")
-plt.title("Convergence plot of solver")
-plt.legend()
+#%%
 
+fig, ax = plt.subplots(1, 2, figsize=(8, 4))
+
+# First subplot: Convergence Plot
+ax[0].semilogy(N_values, errors_dealias, ".-", label=r"de-alias")
+ax[0].semilogy(N_values, errors_alias, ".-", label=r"alias")
+ax[0].set_xlabel(r"$N$")
+ax[0].set_ylabel(r"$e=\Vert u_N - u \Vert_{L^2}$")
+ax[0].set_title("Convergence Plot")
+ax[0].legend()
+
+# Second subplot: CPU time vs N
+ax[1].semilogy(N_values, time_dealias, ".-", label=r"de-alias")
+ax[1].semilogy(N_values, time_alias, ".-", label=r"alias")
+ax[1].semilogy(N_values,np.exp(0.01*N_values))
+ax[1].set_xlabel(r"$N$")
+ax[1].set_ylabel(r"time (s)")
+ax[1].set_title("CPU time vs N")
+ax[1].legend()
+
+# Show the figure with subplots
+plt.tight_layout()  # Adjusts spacing to prevent overlap
 plt.show()
 
 
