@@ -12,13 +12,13 @@ import functions_TIME as functions
 dealias = False
 
 #%% Opgave d)
-N = 300
+N = 400
 # Fine grid (zero-padding)
 M = 3*N//2
 w = nodes(N)
 D = diff_matrix(N)
 D3 = D @ D @ D
-x1, x2 = 100, 100
+x1, x2 = 40, 40
 a = 2 * np.pi / (x1 + x2)
 w0 = np.pi 
 tf = 1.0
@@ -28,7 +28,7 @@ c = np.array([0.25,0.5,1])
 alpha = 0.5
 max_step = alpha * 1.73*8/(N**3*a**3)
 
-time = False
+time = True
 
 for c_i in c:
 
@@ -107,18 +107,9 @@ for c_i in c:
         plt.figure()
         plt.plot(t, L2_error, label=r"$\|u - \mathcal{I}_N u\|_{L_2}$")
         plt.xlabel('Time (t)')
-        plt.ylabel(r"$L_2$-norm Error")
-        plt.title(f'Evolution of $L_2$ Error for c={c_i}')
-        plt.legend()
-        plt.grid(True)
-        
-
-        # Plot the Linf norm error evolution over time
-        plt.figure()
+        plt.ylabel(r"Error")
+        plt.title(f'Evolution Errors for c={c_i}')
         plt.plot(t, Linf_error, label=r"$\|u - \mathcal{I}_N u\|_{L_\infty}$", color="red")
-        plt.xlabel('Time (t)')
-        plt.ylabel(r"$L_\infty$-norm Error")
-        plt.title(f'Evolution of $L_\infty$ Error for c={c_i}')
         plt.legend()
         plt.grid(True)
 
