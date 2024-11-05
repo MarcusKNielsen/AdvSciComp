@@ -12,17 +12,17 @@ from time import perf_counter
 
 #%% Convergence test: 
 # Set up different values for N (number of grid points) 
-N_max = 500
-N_values = np.arange(10,N_max,20) #N_max//10
+N_max = 400
+N_values = np.arange(10,N_max,10) #N_max//10
 errors_alias = []
 errors_dealias = []
 time_alias = []
 time_dealias = []
 
 # Constants 
-c_value = 1.0
+c_value = 0.5
 tf =  1.0
-alpha = 0.5
+alpha = 0.9
 w0 = np.pi
 
 for N in N_values:
@@ -75,21 +75,45 @@ for N in N_values:
     errors_alias.append(error_alias)
 
 #%%
+import matplotlib
 
 fig, ax = plt.subplots(1, 2, figsize=(8, 4))
 
 # First subplot: Convergence Plot
-ax[0].semilogy(N_values, errors_dealias, ".-", label=r"de-alias")
+ax[0].semilogy(N_values, errors_dealias, ".-", label=r"dealias")
 ax[0].semilogy(N_values, errors_alias, ".-", label=r"alias")
 ax[0].set_xlabel(r"$N$")
-ax[0].set_ylabel(r"$e=\Vert u_N - u \Vert_{L^2}$")
+ax[0].set_ylabel(r"$\Vert u_N - u \Vert_{L^2}$")
 ax[0].set_title("Convergence Plot")
 ax[0].legend()
 
+# Get the x-axis ticks from the semilogy plot
+semilogy_ticks = ax[0].get_xticks()
+
 # Second subplot: CPU time vs N
-ax[1].semilogy(N_values, time_dealias, ".-", label=r"de-alias")
-ax[1].semilogy(N_values, time_alias, ".-", label=r"alias")
-ax[1].semilogy(N_values,np.exp(0.01*N_values))
+ax[1].loglog(N_values, time_dealias, ".-", label=r"dealias")
+ax[1].loglog(N_values, time_alias, ".-", label=r"alias")
+
+# Fit a polynomial
+degree = 3
+coefficients = np.polyfit(N_values, time_alias, degree)
+polynomial = np.poly1d(coefficients)
+fitted_y_values1 = polynomial(N_values)
+# ax[1].loglog(N_values, fitted_y_values1, "--", label=r"Scaling $\sim N^3$")
+
+degree = 3
+coefficients = np.polyfit(N_values, time_dealias, degree)
+coefficients[1] = 0
+coefficients[2] = 0
+coefficients[3] = 0
+polynomial = np.poly1d(coefficients)
+fitted_y_values2 = polynomial(N_values)
+ax[1].loglog(N_values, fitted_y_values2, "--", label=r"Scaling $\sim N^3$")
+
+# Set the x-axis ticks on the loglog plot to match those from the semilogy plot
+ax[1].set_xticks([10,20,30,50,100,200,400])
+ax[1].get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+
 ax[1].set_xlabel(r"$N$")
 ax[1].set_ylabel(r"time (s)")
 ax[1].set_title("CPU time vs N")

@@ -39,11 +39,11 @@ def Dealias(u, v, N, M):
     return w.real
 
 def f(t,u,D,D3,a):
-    return -6*a*u*(D@u) - a**3 * D3@u
+    return -6*a*u*(D@u) - a**3 * (D3@u)
 
 def f_alias_free(t,u,D,D3,a,N,M):
     w = Dealias(u, D@u, N, M)
-    return -6*a*w - a**3 * D3@u
+    return -6*a*w - a**3 * (D3@u)
 
 def u_exact(x,t,c,x0,x1=20,x2=20):
     return 0.5*c*1/(np.cosh(0.5*np.sqrt(c)*(x-c*t-x0)))**2
