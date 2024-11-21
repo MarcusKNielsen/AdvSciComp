@@ -16,7 +16,7 @@ def flux_star_right(u,up1,alpha,a):
 
 def flux_star_left(u,um1,alpha,a):
     flux = a*(u[0]+um1[-1])/2 + np.abs(a)*(1-alpha)/2*(-u[0]+um1[-1])
-    return flux
+    return flux 
 
 def g_func(x,t,a):
     return np.sin(np.pi*(x-a*t))

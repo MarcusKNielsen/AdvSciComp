@@ -17,7 +17,7 @@ def flux_star_left(u,um1,alpha,a):
 def g_func(x,t,a):
     return np.sin(np.pi*(x-a*t))
 
-def f_func(t,u,Mk_inv,S,N,alpha,a):
+def f_func(t,u,Mk_inv,S,N,alpha,a,g0_val):
     
     DUDT = np.zeros_like(u)
 
@@ -32,13 +32,14 @@ def f_func(t,u,Mk_inv,S,N,alpha,a):
         if k == 0:
             uk = u[k:int(k+N)]
             ukp1 = u[int(k+N):int(k+2*N)]
-            rhs = lagrange_rhs_right*(a*uk[-1]-flux_star_right(uk,ukp1,alpha,a))-lagrange_rhs_left*(a*uk[0]) #-(-a*u[0]+2*a*g_func(x_total[0],t,a))
+            rhs = lagrange_rhs_right*(a*uk[-1]-flux_star_right(uk,ukp1,alpha,a))-lagrange_rhs_left*(a*uk[0]-a*g0_val(t))
 
         elif k == (len(u)-N):
             ukm1 = u[int(k-N):k]
             uk = u[k:int(k+N)]
-            rhs = lagrange_rhs_right*(a*uk[-1])-lagrange_rhs_left*(a*uk[0]-flux_star_left(uk,ukm1,alpha,a))
-        
+            #rhs = lagrange_rhs_right*(a*uk[-1]-a*(uk[-1]))-lagrange_rhs_left*(a*uk[0]-flux_star_left(uk,ukm1,alpha,a))
+            rhs = lagrange_rhs_right*(a*uk[-1]-a*(g0_val(t)))-lagrange_rhs_left*(a*uk[0]-flux_star_left(uk,ukm1,alpha,a))
+       
         else:
             ukm1 = u[int(k-N):k]
             uk = u[k:int(k+N)]
@@ -63,7 +64,7 @@ N = 10
 number_element = 50
 x_nodes = legendre.nodes(N)
 x_total = total_grid_points(number_element,x_nodes,x_left,x_right)
-u0 = scipy.stats.norm.pdf(x_total,scale=0.1)  #  np.sin(np.pi*x_total) #
+u0 = np.sin(np.pi*x_total) #scipy.stats.norm.pdf(x_total,scale=0.1)  #  
 h = (x_total[-1]-x_total[0])/number_element
 
 V,Vx,_ = legendre.vander(x_nodes)
@@ -74,10 +75,15 @@ Dx = Vx@np.linalg.inv(V)
 S = M@Dx
 a = 1
 alpha = 0
-max_step = 0.1
-tf = 10.0
+max_step = 1
+tf = 20.0
 
-sol = solve_ivp(f_func, [0, tf], u0, args=(Mk_inv,S,N,alpha,a), max_step=max_step, dense_output=True, method="RK23")
+def g0_val(t):
+    return np.sin(np.pi*(x_total[0]-a*t))
+
+#g0_val = 0
+
+sol = solve_ivp(f_func, [0, tf], u0, args=(Mk_inv,S,N,alpha,a,g0_val), max_step=max_step, dense_output=True, method="Radau")
 
 plt.figure()
 plt.plot(x_total,sol.y[:,-1],label="last")
