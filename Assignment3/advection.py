@@ -7,11 +7,11 @@ import matplotlib.pyplot as plt
 import scipy
 
 def flux_star_right(u,up1,alpha,a):
-        flux = a*(u[-1]+up1[0])/2 + np.abs(a)*(1-alpha)/2*(u[-1]-up1[0])
+        flux = a*(u[-1]+up1[0])/2 + np.abs(a)*(1-alpha)/2*(-u[-1]+up1[0])
         return flux
 
 def flux_star_left(u,um1,alpha,a):
-    flux = a*(u[0]+um1[-1])/2 + np.abs(a)*(1-alpha)/2*(-u[0]+um1[-1])
+    flux = a*(u[0]+um1[-1])/2 + np.abs(a)*(1-alpha)/2*(u[0]-um1[-1])
     return flux
 
 def g_func(x,t,a):
@@ -32,13 +32,14 @@ def f_func(t,u,Mk_inv,S,N,alpha,a,g0_val):
         if k == 0:
             uk = u[k:int(k+N)]
             ukp1 = u[int(k+N):int(k+2*N)]
+            #rhs = lagrange_rhs_right*(a*uk[-1]-flux_star_right(uk,ukp1,alpha,a))-lagrange_rhs_left*(a*uk[0]-a*uk[-1])
             rhs = lagrange_rhs_right*(a*uk[-1]-flux_star_right(uk,ukp1,alpha,a))-lagrange_rhs_left*(a*uk[0]-a*g0_val(t))
 
         elif k == (len(u)-N):
             ukm1 = u[int(k-N):k]
             uk = u[k:int(k+N)]
-            #rhs = lagrange_rhs_right*(a*uk[-1]-a*(uk[-1]))-lagrange_rhs_left*(a*uk[0]-flux_star_left(uk,ukm1,alpha,a))
-            rhs = lagrange_rhs_right*(a*uk[-1]-a*(g0_val(t)))-lagrange_rhs_left*(a*uk[0]-flux_star_left(uk,ukm1,alpha,a))
+            #rhs = lagrange_rhs_right*(a*uk[-1]-a*(-uk[-1]))-lagrange_rhs_left*(a*uk[0]-flux_star_left(uk,ukm1,alpha,a))
+            rhs = lagrange_rhs_right*(a*uk[-1]-a*(-uk[-1]))-lagrange_rhs_left*(a*uk[0]-flux_star_left(uk,ukm1,alpha,a))
        
         else:
             ukm1 = u[int(k-N):k]
@@ -64,7 +65,7 @@ N = 10
 number_element = 50
 x_nodes = legendre.nodes(N)
 x_total = total_grid_points(number_element,x_nodes,x_left,x_right)
-u0 = np.sin(np.pi*x_total) #scipy.stats.norm.pdf(x_total,scale=0.1)  #  
+u0 =  np.sin(np.pi*x_total) # scipy.stats.norm.pdf(x_total,scale=0.1)  #
 h = (x_total[-1]-x_total[0])/number_element
 
 V,Vx,_ = legendre.vander(x_nodes)
@@ -73,15 +74,13 @@ Mk = (h/2)*M
 Mk_inv = np.linalg.inv(M) 
 Dx = Vx@np.linalg.inv(V)
 S = M@Dx
-a = 1
+a = 1.0
 alpha = 0
-max_step = 1
-tf = 20.0
+max_step = 0.5
+tf = 5.1
 
 def g0_val(t):
     return np.sin(np.pi*(x_total[0]-a*t))
-
-#g0_val = 0
 
 sol = solve_ivp(f_func, [0, tf], u0, args=(Mk_inv,S,N,alpha,a,g0_val), max_step=max_step, dense_output=True, method="Radau")
 
