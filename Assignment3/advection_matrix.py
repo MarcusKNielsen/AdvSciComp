@@ -64,13 +64,8 @@ def A_mat(M_inv,S,a,alpha,num_elements):
     # Initialize small A
     A_small = np.zeros([N,N])
 
-    # Construct true flux
-    H = np.zeros([N,N])
-    #H[0,0] = -a
-    #H[-1,-1] = a
-
     # Compute smalle A
-    A_small = M_inv@(H-(S@np.diag(np.ones(N)*a)))
+    A_small = M_inv@(-(S@np.diag(np.ones(N)*a)))
     
     # Construct big A matrix
     A_big = np.kron(np.eye(num_elements,dtype=int),A_small)
@@ -127,7 +122,7 @@ if __name__ == "__main__":
     V,Vx,_ = legendre.vander(x_nodes)
     M = np.linalg.inv(V@V.T)
     Mk = (h/2)*M
-    Mk_inv = np.linalg.inv(M) 
+    Mk_inv = np.linalg.inv(Mk) 
     Dx = Vx@np.linalg.inv(V)
     S = M@Dx
     a = 1

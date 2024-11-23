@@ -14,7 +14,7 @@ def set_up_A_mat(x_nodes,h):
     V,Vx,_ = legendre.vander(x_nodes)
     M = np.linalg.inv(V@V.T)
     Mk = (h/2)*M
-    Mk_inv = np.linalg.inv(M) 
+    Mk_inv = np.linalg.inv(Mk) 
     Dx = Vx@np.linalg.inv(V)
     S = M@Dx
 
@@ -49,7 +49,6 @@ for idx_ni,ni in enumerate(N_list):
 
         Mk_inv,S = set_up_A_mat(x_nodes,h)
         A = ad_mat.A_mat(Mk_inv,S,a,alpha,e)
-
         Eig_mat[idx_ni,idx_e] = np.max(np.abs(np.linalg.eigvals(A)))
 
 

@@ -20,10 +20,9 @@ def f_func(t,u,Mk_inv,D,S,N,alpha,a):
 
     for k in range(0,len(u),N):
 
-        lagrange_rhs = np.zeros(N)
-        lagrange_rhs_left = lagrange_rhs
+        lagrange_rhs_left = np.zeros(N)
         lagrange_rhs_left[0] = 1
-        lagrange_rhs_right = lagrange_rhs
+        lagrange_rhs_right = np.zeros(N)
         lagrange_rhs_right[-1] = 1
 
         if k == 0:
@@ -52,7 +51,7 @@ def f_func(t,u,Mk_inv,D,S,N,alpha,a):
             rhs_u = lagrange_rhs_right*(a*qk[-1]-flux_star_right(qk,qkp1,alpha,a))-lagrange_rhs_left*(a*qk[0]-flux_star_left(qk,qkm1,alpha,a))
             Q = Mk_inv@(lagrange_rhs_right*(a*uk[-1]-flux_star_right(uk,ukp1,alpha,a))-lagrange_rhs_left*(a*uk[0]-flux_star_left(uk,ukm1,alpha,a)))
 
-        DUDT[k:int(k+N)] = Mk_inv@(-S@(a*Q)+rhs_u) 
+        DUDT[k:int(k+N)] = Mk_inv@(S@(a*Q)-rhs_u) 
 
     return DUDT
 
@@ -76,19 +75,19 @@ h = (x_total[-1]-x_total[0])/number_element
 V,Vx,_ = legendre.vander(x_nodes)
 M = np.linalg.inv(V@V.T)
 Mk = (h/2)*M
-Mk_inv = np.linalg.inv(M) 
+Mk_inv = np.linalg.inv(Mk) 
 Dx = Vx@np.linalg.inv(V)
 S = M@Dx
 a = 1
 alpha = 1
 max_step = 0.9
-tf = 0.001
+tf = 10.0
 
 sol = solve_ivp(f_func, [0, tf], u0, args=(Mk_inv,Dx,S,N,alpha,a), max_step=max_step, dense_output=True, method="Radau")
 
 plt.figure()
-plt.plot(x_total,sol.y[:,-1],label="last")
-plt.plot(x_total,sol.y[:,0],label="first")
+plt.plot(x_total,sol.y[:,-1],'o',label="last")
+plt.plot(x_total,sol.y[:,0],'-',label="first")
 plt.legend()
 
 plt.figure()

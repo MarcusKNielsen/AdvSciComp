@@ -5,65 +5,73 @@ def flux_star(um,up,alpha,a):
         flux = a*(up+um)/2 + np.abs(a)*(1-alpha)/2*(up-um)
         return flux
 
-def f_func(t,u,Mk_inv,S,N,alpha,a,g0_val):
+def f_func(t,u,Mk_inv,S,N,alpha,a,g0_val,formulation):
     
     DUDT = np.zeros_like(u)
     
     lagrange_rhs_left = np.zeros(N)
-    lagrange_rhs_left[0] = 1
+    lagrange_rhs_left[0] = 1 
     lagrange_rhs_right = np.zeros(N)
     lagrange_rhs_right[-1] = 1
 
     for k in range(0,len(u),N):
-        
-        uk = u[k:k+N] # Not used just for convinience
+
+        uk = u[k:k+N]
         
         if k == 0:
             
             # left boundary of element
-            um_left    = g0_val(t)
-            up_left    = u[k]
-            flux_left  = flux_star(um_left,up_left,alpha,a)
-            flux_left  = a*um_left
+            up_left    = g0_val(t)
+            um_left   = u[k] 
+            flux_left  = a*up_left 
             
             # right boundary of element
             um_right   = u[k+N-1]
             up_right   = u[k+N] 
-            flux_right = flux_star(um_right,up_right,alpha,a)
+            flux_right = flux_star(up_right,um_right,alpha,a)
             
-            rhs = lagrange_rhs_right*(flux_right)-lagrange_rhs_left*(flux_left)
+            if formulation == "w":
+                rhs = lagrange_rhs_right*(flux_right)-lagrange_rhs_left*(flux_left)
+            elif formulation == "s":
+                rhs = lagrange_rhs_right*(a*um_right-flux_right)-lagrange_rhs_left*(a*um_left-flux_left)
 
         elif k == (len(u)-N):
             
             # left boundary of element
-            um_left    = u[k-1]
-            up_left    = u[k] 
+            um_left    = u[k]
+            up_left    = u[k-1] 
             flux_left  = flux_star(um_left,up_left,alpha,a)
             
             # right boundary of element
             um_right   = u[-1]
-            #up_right   = uk[-1]
-            #flux_right = a*um_right
             flux_right = a*um_right
-            #flux_right = flux_star(um_right,up_right,alpha,a)
             
-            rhs = lagrange_rhs_right*(flux_right)-lagrange_rhs_left*(flux_left)
-       
+            if formulation == "w":
+                rhs = lagrange_rhs_right*(flux_right)-lagrange_rhs_left*(flux_left)
+            elif formulation == "s":
+                rhs = lagrange_rhs_right*(a*um_right-flux_right)-lagrange_rhs_left*(a*um_left-flux_left)
+
         else:
 
             # left boundary of element
-            um_left    = u[k-1]
-            up_left    = u[k] 
+            um_left    = u[k]
+            up_left    = u[k-1] 
             flux_left  = flux_star(um_left,up_left,alpha,a)
             
             # right boundary of element
             um_right   = u[k+N-1]
             up_right   = u[k+N]
-            flux_right = flux_star(um_right,up_right,alpha,a)
+            flux_right = flux_star(up_right,um_right,alpha,a)
 
-            rhs = lagrange_rhs_right*(flux_right)-lagrange_rhs_left*(flux_left)
+            if formulation == "w":
+                rhs = lagrange_rhs_right*(flux_right)-lagrange_rhs_left*(flux_left)
+            elif formulation == "s":
+                rhs = lagrange_rhs_right*(a*um_right-flux_right)-lagrange_rhs_left*(a*um_left-flux_left)
 
-        DUDT[k:int(k+N)] = Mk_inv@(((S.T)@(a*uk))-rhs) 
+        if formulation == "w":
+            DUDT[k:int(k+N)] = Mk_inv@(((S.T)@(a*uk))-rhs) 
+        elif formulation == "s":
+            DUDT[k:int(k+N)] = Mk_inv@(-S@(a*uk)+rhs) 
 
     return DUDT
 
@@ -102,16 +110,17 @@ if __name__ == "__main__":
     Dx = Vx@np.linalg.inv(V)
     S = M@Dx
     a = 1.0
-    alpha = 0.7
-    max_step = 0.01
-    tf = 0.1
+    alpha = 1.0 
+    max_step = 0.01 
+    tf = 10.2 
+    formulation = "w" 
     
-    sol = solve_ivp(f_func, [0, tf], u0, args=(Mk_inv,S,N,alpha,a,g0_val), max_step=max_step, dense_output=True, method="Radau")
+    sol = solve_ivp(f_func, [0, tf], u0, args=(Mk_inv,S,N,alpha,a,g0_val,formulation), max_step=max_step, dense_output=True, method="RK23")
     
     plt.figure()
     plt.plot(x_total,sol.y[:,-1],".",label=r"$u(x,t_f)$")
     plt.plot(x_total,sol.y[:,0],label=r"$u(x,t_0)$")
-    plt.plot(x_total,g_func(x_total,sol.t[-1],a),label=r"$u_{exact}$")
+    #plt.plot(x_total,g_func(x_total,sol.t[-1],a),label=r"$u_{exact}$")
     plt.xlabel("x")
     plt.ylabel("u")
     plt.legend()
