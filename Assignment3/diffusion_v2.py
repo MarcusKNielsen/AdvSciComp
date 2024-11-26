@@ -130,7 +130,7 @@ def u_exact(x,t,a):
 x_left = -1
 x_right = 1
 N = 15
-number_element = 4
+number_element = 5
 x_nodes = legendre.nodes(N)
 x_total = total_grid_points(number_element,x_nodes,x_left,x_right)
 
@@ -145,15 +145,15 @@ S = M@Dx
 a = 1
 alpha = 1
 max_step = 0.001
-t0 = 0.01
-tf = .1
+t0 = 0.005
+tf = 0.01
 
 u0 = u_exact(x_total,t0,a)
 
 sol = solve_ivp(f_func, [t0, tf], u0, args=(Mk_inv,Dx,S,N,alpha,a), max_step=max_step, dense_output=True, method="Radau")
 
 plt.figure()
-plt.plot(x_total,sol.y[:,-1],'o',label=r"$u(x,t_f)$")
+plt.plot(x_total,sol.y[:,-1],'.',label=r"$u(x,t_f)$")
 plt.plot(x_total,sol.y[:,0],'-',label=r"$u(x,t_0)$")
 plt.plot(x_total,u_exact(x_total,tf,a),label=r"$u_{exact}(x,t_f)$")
 plt.legend()
@@ -167,7 +167,7 @@ pcm = plt.pcolormesh(T, X, sol.y.T)
 # Label the axes and add a title
 plt.xlabel("t: time")
 plt.ylabel("x: space")
-plt.title("Collision of Two Solitons")
+plt.title("Diffusion Equation")
 
 # Add the colorbar
 plt.colorbar(pcm, label="u(x,t)")

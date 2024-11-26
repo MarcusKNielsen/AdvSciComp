@@ -22,7 +22,7 @@ def f_func(t,u,Mk_inv,S,N,alpha,a,g0_val,formulation):
             
             # left boundary of element
             up_left    = g0_val(t)
-            um_left   = u[k] 
+            um_left    = u[k] 
             flux_left  = a*up_left 
             
             # right boundary of element
@@ -113,14 +113,14 @@ if __name__ == "__main__":
     alpha = 1.0 
     max_step = 0.01 
     tf = 10.2 
-    formulation = "w" 
+    formulation = "s" 
     
     sol = solve_ivp(f_func, [0, tf], u0, args=(Mk_inv,S,N,alpha,a,g0_val,formulation), max_step=max_step, dense_output=True, method="RK23")
     
     plt.figure()
     plt.plot(x_total,sol.y[:,-1],".",label=r"$u(x,t_f)$")
     plt.plot(x_total,sol.y[:,0],label=r"$u(x,t_0)$")
-    #plt.plot(x_total,g_func(x_total,sol.t[-1],a),label=r"$u_{exact}$")
+    plt.plot(x_total,g_func(x_total,sol.t[-1],a),label=r"$u_{exact}$")
     plt.xlabel("x")
     plt.ylabel("u")
     plt.legend()
