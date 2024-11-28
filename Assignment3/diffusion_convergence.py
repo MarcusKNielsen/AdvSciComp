@@ -1,6 +1,6 @@
 import numpy as np
 import func.legendre as legendre
-from advection_v2 import f_func, g_func,total_grid_points
+from diffusion_v2 import f_func,u_exact,total_grid_points
 from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
 
@@ -8,17 +8,14 @@ import matplotlib.pyplot as plt
 x_left = -1
 x_right = 1
 a = 1.0 
-alpha = 0.0
+alpha = 1.0
 max_step = 0.0001
-tf = 0.001
-formulation = "s"
-
-def g0_val(t):
-    return np.sin(np.pi*(-1-a*t))
+t0 = 0.005
+tf = 0.009
 
 # Convergence test 
-N_list = np.arange(3,10) 
-K_list = np.logspace(1,2,20,dtype=int)
+N_list = np.arange(5,11) 
+K_list = np.logspace(1,2,10,dtype=int)
 
 error = np.zeros([len(N_list),len(K_list)])
 
@@ -27,19 +24,21 @@ for N_idx,N in enumerate(N_list):
 
         x_nodes = legendre.nodes(N)
         x_total = total_grid_points(K,x_nodes,x_left,x_right)
-        u0 =  np.sin(np.pi*x_total)
+
         h = (x_total[-1]-x_total[0])/K
-        
-        V,Vx,w = legendre.vander(x_nodes)
+
+        V,Vx,_ = legendre.vander(x_nodes)
         M = np.linalg.inv(V@V.T)
         Mk = (h/2)*M
         Mk_inv = np.linalg.inv(Mk) 
         Dx = Vx@np.linalg.inv(V)
         S = M@Dx
 
-        sol = solve_ivp(f_func, [0, tf], u0, args=(Mk_inv,S,N,alpha,a,g0_val,formulation), max_step=max_step, dense_output=True, method="RK23")
+        u0 = u_exact(x_total,t0,a)
+
+        sol = solve_ivp(f_func, [t0, tf], u0, args=(Mk_inv,Dx,S,N,alpha,a), max_step=max_step, dense_output=True, method="Radau")
             
-        error[N_idx,K_idx] = np.max(np.abs(g_func(x_total,sol.t[-1],a) - sol.y[:,-1]))
+        error[N_idx,K_idx] = np.max(np.abs(u_exact(x_total,sol.t[-1],a) - sol.y[:,-1]))
         
 #%%
 

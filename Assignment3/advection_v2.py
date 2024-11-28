@@ -42,9 +42,9 @@ def f_func(t,u,Mk_inv,S,N,alpha,a,g0_val,formulation):
             up_left    = u[k-1] 
             flux_left  = flux_star(um_left,up_left,alpha,a)
             
-            # right boundary of element
-            um_right   = u[-1]
-            flux_right = a*um_right
+            # right boundary of element 
+            um_right   = u[-1] 
+            flux_right = a*um_right 
             
             if formulation == "w":
                 rhs = lagrange_rhs_right*(flux_right)-lagrange_rhs_left*(flux_left)
@@ -71,7 +71,7 @@ def f_func(t,u,Mk_inv,S,N,alpha,a,g0_val,formulation):
         if formulation == "w":
             DUDT[k:int(k+N)] = Mk_inv@(((S.T)@(a*uk))-rhs) 
         elif formulation == "s":
-            DUDT[k:int(k+N)] = Mk_inv@(-S@(a*uk)+rhs) 
+            DUDT[k:int(k+N)] = Mk_inv@(-S@(a*uk)+rhs)  
 
     return DUDT
 
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     number_element = 10
     x_nodes = legendre.nodes(N)
     x_total = total_grid_points(number_element,x_nodes,x_left,x_right)
-    u0 =  np.sin(np.pi*x_total) # scipy.stats.norm.pdf(x_total,scale=0.1)  #
+    u0 =  np.sin(np.pi*x_total) # scipy.stats.norm.pdf(x_total,scale=0.1)  # 
     h = (x_total[-1]-x_total[0])/number_element
     
     V,Vx,w = legendre.vander(x_nodes)
@@ -126,7 +126,7 @@ if __name__ == "__main__":
     plt.legend()
     
     plt.figure()
-    X, T = np.meshgrid(x_total, sol.t)
+    X, T = np.meshgrid(x_total, sol.t) 
     
     # Create the pcolormesh plot
     pcm = plt.pcolormesh(T, X, sol.y.T)

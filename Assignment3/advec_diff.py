@@ -201,11 +201,11 @@ if __name__ == "__main__":
     x_left = -1
     x_right = 1
     N = 15
-    number_element = 100
+    number_element = 10
     x_nodes = legendre.nodes(N)
     x_total = total_grid_points(number_element,x_nodes,x_left,x_right)
 
-    h = (x_total[-1]-x_total[0])/number_element
+    h = (x_total[-1]-x_total[0])/number_element 
 
     V,Vx,_ = legendre.vander(x_nodes)
     M = np.linalg.inv(V@V.T)
@@ -216,9 +216,9 @@ if __name__ == "__main__":
     a = 1
     d = 0.5
     alpha = 1
-    max_step = 0.005
+    max_step = 0.1
     t0 = 0.05
-    tf = 0.06
+    tf = 0.2
     formulation = "s"
 
     u0 = u_exact(x_total,t0,a,d)

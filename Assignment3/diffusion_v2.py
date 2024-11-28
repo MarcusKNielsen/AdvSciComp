@@ -50,7 +50,7 @@ def f_func(t,u,Mk_inv,D,S,N,alpha,a):
             # Flux for Q equation
             # Flux left
             um_left     = u[k] 
-            flux_left_Q  = -a*um_left 
+            flux_left_Q  = a*um_left 
             # Flux right
             um_right   = u[k+N-1]
             up_right   = u[k+N] 
@@ -79,7 +79,7 @@ def f_func(t,u,Mk_inv,D,S,N,alpha,a):
 
             # Flux right
             um_right      = u[-1] 
-            flux_right_Q  = -a*um_right
+            flux_right_Q  = a*um_right
 
             rhs_u = lagrange_rhs_right*(np.sqrt(a)*qm_right-flux_right_U)-lagrange_rhs_left*(np.sqrt(a)*qm_left-flux_left_U)
             rhs_q = lagrange_rhs_right*(np.sqrt(a)*um_right-flux_right_Q)-lagrange_rhs_left*(np.sqrt(a)*um_left-flux_left_Q)
@@ -127,49 +127,53 @@ def total_grid_points(number_element,x_nodes,a,b):
 def u_exact(x,t,a):
      return np.exp(-x**2/(4*a*t))/np.sqrt(4*np.pi*a*t)
 
-x_left = -1
-x_right = 1
-N = 15
-number_element = 5
-x_nodes = legendre.nodes(N)
-x_total = total_grid_points(number_element,x_nodes,x_left,x_right)
+if __name__ == "__main__":
+     
+    x_left = -1
+    x_right = 1
+    N = 4
+    number_element = 30
+    x_nodes = legendre.nodes(N)
+    x_total = total_grid_points(number_element,x_nodes,x_left,x_right)
 
-h = (x_total[-1]-x_total[0])/number_element
+    h = (x_total[-1]-x_total[0])/number_element
 
-V,Vx,_ = legendre.vander(x_nodes)
-M = np.linalg.inv(V@V.T)
-Mk = (h/2)*M
-Mk_inv = np.linalg.inv(Mk) 
-Dx = Vx@np.linalg.inv(V)
-S = M@Dx
-a = 1
-alpha = 1
-max_step = 0.001
-t0 = 0.005
-tf = 0.01
+    V,Vx,_ = legendre.vander(x_nodes)
+    M = np.linalg.inv(V@V.T)
+    Mk = (h/2)*M
+    Mk_inv = np.linalg.inv(Mk) 
+    Dx = Vx@np.linalg.inv(V)
+    S = M@Dx
+    a = 1
+    alpha = 1 
+    max_step = 0.1
+    t0 = 0.005
+    tf = 0.009
 
-u0 = u_exact(x_total,t0,a)
+    u0 = u_exact(x_total,t0,a)
 
-sol = solve_ivp(f_func, [t0, tf], u0, args=(Mk_inv,Dx,S,N,alpha,a), max_step=max_step, dense_output=True, method="Radau")
+    sol = solve_ivp(f_func, [t0, tf], u0, args=(Mk_inv,Dx,S,N,alpha,a), max_step=max_step, dense_output=True, method="Radau")
 
-plt.figure()
-plt.plot(x_total,sol.y[:,-1],'.',label=r"$u(x,t_f)$")
-plt.plot(x_total,sol.y[:,0],'-',label=r"$u(x,t_0)$")
-plt.plot(x_total,u_exact(x_total,tf,a),label=r"$u_{exact}(x,t_f)$")
-plt.legend()
+    plt.figure()
+    plt.plot(x_total,sol.y[:,-1],'.',label=r"$u(x,t_f)$")
+    plt.plot(x_total,sol.y[:,0],'-',label=r"$u(x,t_0)$")
+    plt.plot(x_total,u_exact(x_total,tf,a),label=r"$u_{exact}(x,t_f)$")
+    plt.legend()
 
-plt.figure()
-X, T = np.meshgrid(x_total, sol.t)
+    print(np.max(np.abs(u_exact(x_total,tf,a) - sol.y[:,-1]))) 
 
-# Create the pcolormesh plot
-pcm = plt.pcolormesh(T, X, sol.y.T)
+    plt.figure()
+    X, T = np.meshgrid(x_total, sol.t)
 
-# Label the axes and add a title
-plt.xlabel("t: time")
-plt.ylabel("x: space")
-plt.title("Diffusion Equation")
+    # Create the pcolormesh plot
+    pcm = plt.pcolormesh(T, X, sol.y.T)
 
-# Add the colorbar
-plt.colorbar(pcm, label="u(x,t)")
+    # Label the axes and add a title
+    plt.xlabel("t: time")
+    plt.ylabel("x: space")
+    plt.title("Diffusion Equation")
 
-plt.show()
+    # Add the colorbar
+    plt.colorbar(pcm, label="u(x,t)")
+
+    plt.show()
