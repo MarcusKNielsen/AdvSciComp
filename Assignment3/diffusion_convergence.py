@@ -11,11 +11,11 @@ a = 1.0
 alpha = 1.0
 max_step = 0.0001
 t0 = 0.005
-tf = 0.009
+tf = 0.006
 
 # Convergence test 
-N_list = np.arange(5,11) 
-K_list = np.logspace(1,2,10,dtype=int)
+N_list = np.arange(3,11) 
+K_list = np.logspace(1,2,20,dtype=int)
 
 error = np.zeros([len(N_list),len(K_list)])
 
@@ -37,13 +37,17 @@ for N_idx,N in enumerate(N_list):
         u0 = u_exact(x_total,t0,a)
 
         sol = solve_ivp(f_func, [t0, tf], u0, args=(Mk_inv,Dx,S,N,alpha,a), max_step=max_step, dense_output=True, method="Radau")
-            
-        error[N_idx,K_idx] = np.max(np.abs(u_exact(x_total,sol.t[-1],a) - sol.y[:,-1]))
+        
+        err = sol.y[:,-1] - u_exact(x_total,tf,a)
+        I = np.eye(K)
+        M_total = np.kron(I,Mk)
+        error[N_idx,K_idx] = np.sqrt(err @ M_total @ err)
+        #error[N_idx,K_idx] = np.max(np.abs(u_exact(x_total,sol.t[-1],a) - sol.y[:,-1]))
         
 #%%
 
 plt.figure()
-plt.title("Convergence Test")
+plt.title("Convergence Test (Diffusion)")
 
 for N_idx,N in enumerate(N_list):
     
@@ -59,8 +63,9 @@ for N_idx,N in enumerate(N_list):
     print(f"a = {a}")
     #print(f"Intercept (b): {b}")
 
+plt.xticks(K_list[::2], labels=K_list[::2])
 plt.xlabel(r"$K$: Number of Elements")
-plt.ylabel(r"$\max|u - u_h|$")
+plt.ylabel(r"$\Vert u - u_h \Vert_{L^2}$")
 plt.legend()
 plt.show()
 

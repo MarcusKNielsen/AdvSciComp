@@ -17,7 +17,7 @@ def g0_val(t):
     return np.sin(np.pi*(-1-a*t))
 
 # Convergence test 
-N_list = np.arange(3,10) 
+N_list = np.arange(3,11) 
 K_list = np.logspace(1,2,20,dtype=int)
 
 error = np.zeros([len(N_list),len(K_list)])
@@ -38,13 +38,17 @@ for N_idx,N in enumerate(N_list):
         S = M@Dx
 
         sol = solve_ivp(f_func, [0, tf], u0, args=(Mk_inv,S,N,alpha,a,g0_val,formulation), max_step=max_step, dense_output=True, method="RK23")
-            
-        error[N_idx,K_idx] = np.max(np.abs(g_func(x_total,sol.t[-1],a) - sol.y[:,-1]))
+         
+        err = sol.y[:,-1] - g_func(x_total,tf,a)
+        I = np.eye(K)
+        M_total = np.kron(I,Mk)
+        error[N_idx,K_idx] = np.sqrt(err @ M_total @ err)
+        #error[N_idx,K_idx] = np.max(np.abs(g_func(x_total,sol.t[-1],a) - sol.y[:,-1]))
         
 #%%
 
 plt.figure()
-plt.title("Convergence Test")
+plt.title("Convergence Test (Advection)")
 
 for N_idx,N in enumerate(N_list):
     
@@ -60,8 +64,9 @@ for N_idx,N in enumerate(N_list):
     print(f"a = {a}")
     #print(f"Intercept (b): {b}")
 
+plt.xticks(K_list[::2], labels=K_list[::2])
 plt.xlabel(r"$K$: Number of Elements")
-plt.ylabel(r"$\max|u - u_h|$")
+plt.ylabel(r"$\Vert u - u_h \Vert_{L^2}$")
 plt.legend()
 plt.show()
 

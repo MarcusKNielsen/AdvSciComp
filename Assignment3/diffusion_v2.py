@@ -1,18 +1,10 @@
-import pandas as pd
 import numpy as np
-import func.L2space as L2space
+#import func.L2space as L2space
 import func.legendre as legendre
 from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
-import scipy
+#import scipy
 
-def flux_star_right(u,up1,alpha,a):
-        flux = a*(u[-1]+up1[0])/2 + np.abs(a)*(1-alpha)/2*(u[-1]-up1[0])
-        return flux
-
-def flux_star_left(u,um1,alpha,a):
-    flux = a*(u[0]+um1[-1])/2 + np.abs(a)*(1-alpha)/2*(-u[0]+um1[-1])
-    return flux 
 
 def flux_star(um,up,alpha,a):
         flux = a*(up+um)/2 + np.abs(a)*(1-alpha)/2*(up-um)
@@ -22,6 +14,11 @@ def f_func(t,u,Mk_inv,D,S,N,alpha,a):
     
     DUDT = np.zeros_like(u)
 
+    lagrange_rhs_left = np.zeros(N)
+    lagrange_rhs_left[0] = 1
+    lagrange_rhs_right = np.zeros(N)
+    lagrange_rhs_right[-1] = 1
+
     q = np.zeros_like(u)
     for k in range(0,len(u),N):
          q[k:int(k+N)] = D@u[k:int(k+N)]
@@ -30,11 +27,6 @@ def f_func(t,u,Mk_inv,D,S,N,alpha,a):
 
         uk = u[k:int(k+N)]
         qk = q[k:int(k+N)]
-
-        lagrange_rhs_left = np.zeros(N)
-        lagrange_rhs_left[0] = 1
-        lagrange_rhs_right = np.zeros(N)
-        lagrange_rhs_right[-1] = 1
 
         if k == 0:
 
@@ -131,8 +123,8 @@ if __name__ == "__main__":
      
     x_left = -1
     x_right = 1
-    N = 4
-    number_element = 30
+    N = 15
+    number_element = 5
     x_nodes = legendre.nodes(N)
     x_total = total_grid_points(number_element,x_nodes,x_left,x_right)
 
@@ -145,19 +137,22 @@ if __name__ == "__main__":
     Dx = Vx@np.linalg.inv(V)
     S = M@Dx
     a = 1
-    alpha = 1 
-    max_step = 0.1
+    alpha = 1.0 
+
+    max_step = 0.0001
     t0 = 0.005
-    tf = 0.009
+    tf = 0.006
 
     u0 = u_exact(x_total,t0,a)
 
     sol = solve_ivp(f_func, [t0, tf], u0, args=(Mk_inv,Dx,S,N,alpha,a), max_step=max_step, dense_output=True, method="Radau")
 
+    x_large = np.linspace(x_left,x_right,1000)
+
     plt.figure()
     plt.plot(x_total,sol.y[:,-1],'.',label=r"$u(x,t_f)$")
-    plt.plot(x_total,sol.y[:,0],'-',label=r"$u(x,t_0)$")
-    plt.plot(x_total,u_exact(x_total,tf,a),label=r"$u_{exact}(x,t_f)$")
+    plt.plot(x_large,u_exact(x_large,t0,a),'-',label=r"$u(x,t_0)$")
+    plt.plot(x_large,u_exact(x_large,tf,a),label=r"$u_{exact}(x,t_f)$")
     plt.legend()
 
     print(np.max(np.abs(u_exact(x_total,tf,a) - sol.y[:,-1]))) 
@@ -177,3 +172,47 @@ if __name__ == "__main__":
     plt.colorbar(pcm, label="u(x,t)")
 
     plt.show()
+
+    #%%
+    
+    
+    
+    plt.figure()
+
+    #plt.plot(x_large,u_exact(x_large,t0,a),'-',label=r"$u(x,t_0)$")
+    plt.plot(x_large,u_exact(x_large,tf,a),label=r"$u_{exact}(x,t_f)$")
+    
+    uf = sol.y[:,-1]
+    Vinv = np.linalg.inv(V)
+    Next = 50
+    
+    for k in range(number_element):
+        xk = x_total[k*N:(k+1)*N]
+        xk_l = xk[0]
+        xk_r = xk[-1]
+        xk_ext = np.linspace(xk_l,xk_r,)
+        r = 2 * (xk_ext - xk_l)/(xk_r - xk_l) - 1
+        
+        Vext,_,_ = legendre.vander(r,N)
+        
+        plt.plot(xk_ext,Vext@Vinv@uf[k*N:(k+1)*N],".")
+
+    plt.legend()
+
+    plt.show()
+
+#%%
+    I = np.eye(number_element)
+    M_total = np.kron(I,Mk)
+    
+    diff = uf - u_exact(x_total,tf,a)
+    
+    error = diff @ M_total @ diff
+
+
+
+
+
+
+
+
