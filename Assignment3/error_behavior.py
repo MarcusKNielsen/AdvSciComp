@@ -9,18 +9,19 @@ x_left = -1
 x_right = 1
 a = 1.0 
 alpha = 0.0
-max_step = 0.1
-tf = 1
-formulation = "s"
+max_step = 0.001
+tf = 0.1
+formulation = "w"
 
 def g0_val(t):
     return np.sin(np.pi*(-1 - a * t))
 
 # Convergence test
-N_list = [2,4, 8]  # Example N values for rows
-K_list = [2,4, 8, 16, 32, 64]  # Example K values for columns
+N_list = [2,4,6,8]  # Example N values for rows
+K_list = [2, 4, 8, 16, 32, 64]  # Example K values for columns
 
 error = np.zeros((len(N_list), len(K_list)))
+#time_matrix = 
 
 for N_idx, N in enumerate(N_list):
     for K_idx, K in enumerate(K_list):
@@ -35,7 +36,7 @@ for N_idx, N in enumerate(N_list):
         Mk = (h / 2) * M
         Mk_inv = np.linalg.inv(Mk) 
         Dx = Vx @ np.linalg.inv(V)
-        S = M @ Dx
+        S = M @ Dx 
 
         sol = solve_ivp(f_func, [0, tf], u0, args=(Mk_inv, S, N, alpha, a, g0_val, formulation), max_step=max_step, dense_output=True, method="Radau")
 
@@ -64,6 +65,7 @@ for N_idx, N in enumerate(N_list):
     print(f"{N}\t" + "\t".join(row) + f"\t{rate}")
 
 
-
-
+plt.figure()
+plt.imshow(error)
+plt.show()
 

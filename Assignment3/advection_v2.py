@@ -1,6 +1,6 @@
 import numpy as np
 import func.legendre as legendre
-
+ 
 def flux_star(um,up,alpha,a):
         flux = a*(up+um)/2 + np.abs(a)*(1-alpha)/2*(up-um)
         return flux
@@ -42,7 +42,7 @@ def f_func(t,u,Mk_inv,S,N,alpha,a,g0_val,formulation):
             up_left    = u[k-1] 
             flux_left  = flux_star(um_left,up_left,alpha,a)
             
-            # right boundary of element 
+            # right boundary of element  
             um_right   = u[-1] 
             flux_right = a*um_right 
             
@@ -52,7 +52,7 @@ def f_func(t,u,Mk_inv,S,N,alpha,a,g0_val,formulation):
                 rhs = lagrange_rhs_right*(a*um_right-flux_right)-lagrange_rhs_left*(a*um_left-flux_left)
 
         else:
-
+ 
             # left boundary of element
             um_left    = u[k]
             up_left    = u[k-1] 
@@ -98,7 +98,7 @@ if __name__ == "__main__":
     x_right = 1
     N = 5
     number_element = 10
-    x_nodes = legendre.nodes(N)
+    x_nodes = legendre.nodes(N) 
     x_total = total_grid_points(number_element,x_nodes,x_left,x_right)
     u0 =  np.sin(np.pi*x_total) # scipy.stats.norm.pdf(x_total,scale=0.1)  # 
     h = (x_total[-1]-x_total[0])/number_element

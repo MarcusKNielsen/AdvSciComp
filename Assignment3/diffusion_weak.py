@@ -10,7 +10,7 @@ def flux_star(um,up,alpha,a):
         flux = a*(up+um)/2 + np.abs(a)*(1-alpha)/2*(up-um)
         return flux
 
-def f_func(t,u,Mk_inv,D,S,N,alpha,a,formulation):
+def f_func(t,u,Mk_inv,D,S,N,alpha,a):
     
     DUDT = np.zeros_like(u)
 
@@ -48,12 +48,8 @@ def f_func(t,u,Mk_inv,D,S,N,alpha,a,formulation):
             up_right   = u[k+N] 
             flux_right_Q = flux_star(up_right,um_right,alpha,np.sqrt(a))
 
-            if formulation == "w":
-                rhs_u = lagrange_rhs_right*(flux_right_U)-lagrange_rhs_left*(flux_left_U)
-                rhs_q = lagrange_rhs_right*(flux_right_Q)-lagrange_rhs_left*(flux_left_Q)
-            elif formulation == "s":
-                rhs_u = lagrange_rhs_right*(np.sqrt(a)*qm_right-flux_right_U)-lagrange_rhs_left*(np.sqrt(a)*qm_left-flux_left_U)
-                rhs_q = lagrange_rhs_right*(np.sqrt(a)*um_right-flux_right_Q)-lagrange_rhs_left*(np.sqrt(a)*um_left-flux_left_Q)
+            rhs_u = lagrange_rhs_right*(flux_right_U)-lagrange_rhs_left*(flux_left_U)
+            rhs_q = lagrange_rhs_right*(flux_right_Q)-lagrange_rhs_left*(flux_left_Q)
 
         elif k == (len(u)-N):
 
@@ -77,12 +73,8 @@ def f_func(t,u,Mk_inv,D,S,N,alpha,a,formulation):
             um_right      = u[-1] 
             flux_right_Q  = np.sqrt(a)*um_right
 
-            if formulation == "w":
-                rhs_u = lagrange_rhs_right*(flux_right_U)-lagrange_rhs_left*(flux_left_U)
-                rhs_q = lagrange_rhs_right*(flux_right_Q)-lagrange_rhs_left*(flux_left_Q)
-            elif formulation == "s":
-                rhs_u = lagrange_rhs_right*(np.sqrt(a)*qm_right-flux_right_U)-lagrange_rhs_left*(np.sqrt(a)*qm_left-flux_left_U)
-                rhs_q = lagrange_rhs_right*(np.sqrt(a)*um_right-flux_right_Q)-lagrange_rhs_left*(np.sqrt(a)*um_left-flux_left_Q)
+            rhs_u = lagrange_rhs_right*(flux_right_U)-lagrange_rhs_left*(flux_left_U)
+            rhs_q = lagrange_rhs_right*(flux_right_Q)-lagrange_rhs_left*(flux_left_Q)
 
         else:
 
@@ -107,21 +99,13 @@ def f_func(t,u,Mk_inv,D,S,N,alpha,a,formulation):
             um_right   = u[k+N-1]
             up_right   = u[k+N]
             flux_right_Q = flux_star(up_right,um_right,alpha,np.sqrt(a))
-           
-            if formulation == "w":
-                rhs_u = lagrange_rhs_right*(flux_right_U)-lagrange_rhs_left*(flux_left_U)
-                rhs_q = lagrange_rhs_right*(flux_right_Q)-lagrange_rhs_left*(flux_left_Q)
-            elif formulation == "s":
-                rhs_u = lagrange_rhs_right*(np.sqrt(a)*qm_right-flux_right_U)-lagrange_rhs_left*(np.sqrt(a)*qm_left-flux_left_U)
-                rhs_q = lagrange_rhs_right*(np.sqrt(a)*um_right-flux_right_Q)-lagrange_rhs_left*(np.sqrt(a)*um_left-flux_left_Q)
 
-        if formulation == "w":
-            qk = Mk_inv@(-(S.T)@(np.sqrt(a)*uk)+rhs_q)
-            DUDT[k:int(k+N)] = Mk_inv@(-(S.T)@(np.sqrt(a)*qk)+rhs_u) 
+            rhs_u = lagrange_rhs_right*(flux_right_U)-lagrange_rhs_left*(flux_left_U)
+            rhs_q = lagrange_rhs_right*(flux_right_Q)-lagrange_rhs_left*(flux_left_Q)
 
-        elif formulation == "s":
-            qk = Mk_inv@(S@(np.sqrt(a)*uk)-rhs_q) 
-            DUDT[k:int(k+N)] = Mk_inv@(S@(np.sqrt(a)*qk)-rhs_u) 
+        qk = Mk_inv@(-(S.T)@(np.sqrt(a)*uk)+rhs_q)
+
+        DUDT[k:int(k+N)] = Mk_inv@(-(S.T)@(np.sqrt(a)*qk)+rhs_u) 
 
     return DUDT 
 
@@ -140,7 +124,7 @@ if __name__ == "__main__":
      
     x_left = -1
     x_right = 1
-    Nm1 = 50
+    Nm1 = 10
     N = Nm1+1
     number_element = 3
     x_nodes = legendre.nodes(N)
@@ -160,10 +144,10 @@ if __name__ == "__main__":
     max_step = 0.0001
     t0 = 0.008
     tf = 0.009
-    formulation = "s"
+
     u0 = u_exact(x_total,t0,a)
 
-    sol = solve_ivp(f_func, [t0, tf], u0, args=(Mk_inv,Dx,S,N,alpha,a,formulation), max_step=max_step, dense_output=True, method="Radau")
+    sol = solve_ivp(f_func, [t0, tf], u0, args=(Mk_inv,Dx,S,N,alpha,a), max_step=max_step, dense_output=True, method="Radau")
 
     x_large = np.linspace(x_left,x_right,1000)
 
@@ -213,7 +197,7 @@ if __name__ == "__main__":
         
         plt.plot(xk_ext,Vext@Vinv@uf[k*N:(k+1)*N],".")
 
-    plt.legend() 
+    plt.legend()
 
 
 #%%
@@ -229,8 +213,7 @@ if __name__ == "__main__":
     plt.figure()
     plt.plot(x_total,u_exact(x_total,tf,a) - sol.y[:,-1])
 
-    plt.show() 
-
+    plt.show()
 
 
 
