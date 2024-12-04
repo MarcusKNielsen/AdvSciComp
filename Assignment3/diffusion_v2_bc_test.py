@@ -32,8 +32,9 @@ def f_func(t,u,Mk_inv,D,S,N,alpha,a,formulation):
 
             # Flux for Uk equation
             # Flux left
-            qm_left      = q[k] 
-            flux_left_U  = -np.sqrt(a)*qm_left 
+            qm_left   = q[k]
+            qp_left   = -qm_left
+            flux_left_U = flux_star(qm_left,qp_left,alpha,np.sqrt(a))
             # Flux right
             qm_right   = q[k+N-1]
             qp_right   = q[k+N] 
@@ -41,7 +42,7 @@ def f_func(t,u,Mk_inv,D,S,N,alpha,a,formulation):
 
             # Flux for Q equation
             # Flux left
-            um_left     = u[k] 
+            um_left      = u[k] 
             flux_left_Q  = np.sqrt(a)*um_left 
             # Flux right
             um_right   = u[k+N-1]
@@ -65,7 +66,8 @@ def f_func(t,u,Mk_inv,D,S,N,alpha,a,formulation):
 
             # Flux right
             qm_right      = q[-1] 
-            flux_right_U  = -np.sqrt(a)*qm_right
+            qp_right      = -qm_right
+            flux_right_U  = flux_star(qp_right,qm_right,alpha,np.sqrt(a))
 
             # Flux for Q equation
             # Flux left
@@ -165,9 +167,9 @@ if __name__ == "__main__":
     a = 0.5
     alpha = 1.0 
 
-    max_step = 0.00001
+    max_step = 0.025
     t0 = 0.008
-    tf = 0.01
+    tf = 2.5
     formulation = "s"
     u0 = u_exact(x_total,t0,a)
 
@@ -231,7 +233,13 @@ if __name__ == "__main__":
     diff = uf - u_exact(x_total,tf,a)
     
     error = np.sqrt(diff @ M_total @ diff)
-    print(error) 
+    print(error)
+    
+#%%
+    U = sol.y
+    Integral_t = np.sum(M_total @ U,axis=0)
+    plt.plot(sol.t,Integral_t)
+
 
     #%% 
     plt.figure()
