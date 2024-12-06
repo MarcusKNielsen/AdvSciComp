@@ -29,15 +29,24 @@ def f_func(t,u,Mk_inv,D,S,N,alpha,a,formulation):
         if k == 0:
 
             # Flux for Uk equation
-            # Flux left
-            qm_left      = q[k] 
-            flux_left_U  = -np.sqrt(a)*qm_left 
+            
+            # Flux left (Reflective)
+            qm_left   = q[k]
+            qp_left   = -qm_left
+            flux_left_U = flux_star(qm_left,qp_left,alpha,np.sqrt(a))
+            
+            # left boundary of element (Periodic)
+            # qp_left    = q[-1]
+            # qm_left    = q[k] 
+            # flux_left_U = flux_star(qp_left,qm_left,alpha,a)
+            
             # Flux right
             qm_right   = q[k+N-1]
             qp_right   = q[k+N] 
             flux_right_U = flux_star(qp_right,qm_right,alpha,np.sqrt(a))
 
             # Flux for Q equation
+            
             # Flux left
             um_left     = u[k] 
             flux_left_Q  = np.sqrt(a)*um_left 
@@ -49,15 +58,22 @@ def f_func(t,u,Mk_inv,D,S,N,alpha,a,formulation):
         elif k == (len(u)-N):
 
             # Flux for Uk equation
+            
             # Flux left
             qm_left   = q[k]
             qp_left   = q[k-1] 
             flux_left_U = flux_star(qm_left,qp_left,alpha,np.sqrt(a))
 
-            # Flux right
+            # Flux right (Reflective)
             qm_right      = q[-1] 
-            flux_right_U  = -np.sqrt(a)*qm_right
-
+            qp_right      = -qm_right
+            flux_right_U  = flux_star(qp_right,qm_right,alpha,np.sqrt(a))
+            
+            # Flux right (Periodic)
+            # qm_right      = q[-1] 
+            # qp_right      = q[0]
+            # flux_right_U  = flux_star(qp_right,qm_right,alpha,np.sqrt(a))
+            
             # Flux for Q equation
             # Flux left
             um_left   = u[k]
@@ -139,12 +155,12 @@ if __name__ == "__main__":
     Mk_inv = np.linalg.inv(Mk) 
     Dx = Vx@np.linalg.inv(V)
     S = M@Dx
-    a = 0.5
+    a = 1.0
     alpha = 1.0 
 
-    max_step = 0.1
+    max_step = 0.0001
     t0 = 0.008
-    tf = 1.0
+    tf = 0.03
     formulation = "s"
     u0 = u_exact(x_total,t0,a)
 
@@ -211,12 +227,50 @@ if __name__ == "__main__":
     print(error) 
 
     #%% 
-    plt.figure()
-    plt.plot(x_total,u_exact(x_total,tf,a) - sol.y[:,-1])
 
-    plt.show() 
+    # Define a fontsize variable
+    fontsize = 12  # You can change this value to control the font size
 
-
+    # Exact solution and error calculation
+    U_exact = u_exact(X, T, a)
+    U = sol.y.T
+    
+    # Error
+    error = U - U_exact
+    
+    # Create a plot with 3 columns and 1 row
+    fig, axes = plt.subplots(1, 3, figsize=(12, 4))
+    
+    # Numerical solution plot
+    im1 = axes[0].pcolormesh(T, X, U, shading='auto', cmap='viridis')
+    axes[0].set_title("Numerical Solution", fontsize=fontsize)
+    axes[0].set_xlabel(r"$t$: time", fontsize=fontsize)
+    axes[0].set_ylabel(r"$x$: space", fontsize=fontsize)
+    fig.colorbar(im1, ax=axes[0])
+    
+    # Exact solution plot
+    im2 = axes[1].pcolormesh(T, X, U_exact, shading='auto', cmap='viridis')
+    axes[1].set_title("Exact Solution", fontsize=fontsize)
+    axes[1].set_xlabel(r"$t$: time", fontsize=fontsize)
+    axes[1].set_ylabel(r"$x$: space", fontsize=fontsize)
+    fig.colorbar(im2, ax=axes[1])
+    
+    # Error plot
+    im3 = axes[2].pcolormesh(T, X, error, shading='auto', cmap='viridis')
+    axes[2].set_title("Error", fontsize=fontsize)
+    axes[2].set_xlabel(r"$t$: time", fontsize=fontsize)
+    axes[2].set_ylabel(r"$x$: space", fontsize=fontsize)
+    fig.colorbar(im3, ax=axes[2])
+    
+    # Add a main title with controlled fontsize
+    fig.suptitle("Diffusion Problem", fontsize=fontsize+2)
+    
+    # Adjust layout
+    plt.tight_layout()
+    plt.subplots_adjust(top=0.85)  # Adjust space for the suptitle
+    
+    # Display the plot
+    plt.show()
 
 
 

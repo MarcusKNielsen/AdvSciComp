@@ -1,11 +1,8 @@
 #%% modules
-import pandas as pd
 import numpy as np
-import func.L2space as L2space
+#import func.L2space as L2space
 import func.legendre as legendre
-from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
-import scipy
 import advection_v2 
 import diffusion_v2
 
@@ -15,7 +12,7 @@ def scalability(method,order=1):
     K_list_test = np.arange(2,110,10)
     Eig_vec_test = np.zeros(len(K_list_test))
     for idx,ki in enumerate(K_list_test):
-        A_ad_test = setup_A(12,ki,t,a,0,x_left,x_right,method)
+        A_ad_test = setup_A(12,ki,t,a,alpha_central,x_left,x_right,method)
         eigvals_ad_test = np.linalg.eigvals(A_ad_test)
         Eig_vec_test[idx] = np.max(np.abs(eigvals_ad_test))
 
@@ -50,6 +47,7 @@ def plt_eig(Eig_mat):
     # Add the colorbar
     plt.colorbar(pcm, label="max|$\lambda$|")
 
+
 def plt_eig_2d(Eig_mat):
     # Assuming Eig_mat, N_list, and number_element_list are defined
     N, K = np.meshgrid(N_list, K_list)
@@ -71,6 +69,7 @@ def plt_eig_2d(Eig_mat):
     fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10, label="max|$\lambda$|")
 
 
+
 def eig_scale(Eig_vec,K_list,order=2):
     plt.figure()
     plt.plot(K_list,Eig_vec,label="eigvals")
@@ -90,6 +89,9 @@ x_left = -1
 x_right = 1
 a = 1
 t = 0
+
+alpha_upwind  = 0.0
+alpha_central = 1.0
 
 #%% Eigen values test
 
@@ -121,8 +123,8 @@ def setup_A(N,K,t,a,alpha,x_left,x_right,method):
     return A
 
 # Looping values
-N_list = np.arange(2,10,2)
-K_list = np.arange(2,10,2)
+N_list = np.arange(2,20,2)
+K_list = np.arange(2,20,2)
 
 Eig_mat_ad = np.zeros([len(N_list),len(K_list)])
 Eig_vec_ad = np.zeros(len(N_list))
@@ -132,14 +134,14 @@ Eig_vec_diff = np.zeros(len(N_list))
 for N_idx,N in enumerate(N_list):
     for K_idx,K in enumerate(K_list):
 
-        A_ad = setup_A(N,K,t,a,0,x_left,x_right,advection_v2)
+        A_ad = setup_A(N,K,t,a,alpha_central,x_left,x_right,advection_v2)
         eigvals_ad = np.linalg.eigvals(A_ad)
         Eig_mat_ad[N_idx,K_idx] = np.max(np.abs(eigvals_ad))
 
         if N == K:
             Eig_vec_ad[N_idx] = np.max(np.abs(eigvals_ad))
 
-        A_diff = setup_A(N,K,t,a,1,x_left,x_right,diffusion_v2)
+        A_diff = setup_A(N,K,t,a,alpha_central,x_left,x_right,diffusion_v2)
         eigvals_diff = np.linalg.eigvals(A_diff)
         Eig_mat_diff[N_idx,K_idx] = np.max(np.abs(eigvals_diff))
 
@@ -147,65 +149,163 @@ for N_idx,N in enumerate(N_list):
             Eig_vec_diff[N_idx] = np.max(np.abs(eigvals_diff))
 
 
-scalability(advection_v2)
-scalability(diffusion_v2,order=2)
+# scalability(advection_v2)
+# scalability(diffusion_v2,order=2)
 
 
 #% Checking only for 100 elements and N
-K_list_test = np.logspace(1,1.5,20,dtype=int)
+K_list_test = np.logspace(1,2,20,dtype=int)
 Eig_vec_test_ad = np.zeros(len(K_list_test))
 Eig_vec_test_diff = np.zeros(len(K_list_test))
 for idx,ki in enumerate(K_list_test):
-    A_ad_test = setup_A(12,ki,t,a,0,x_left,x_right,advection_v2)
-    A_diff_test = setup_A(12,ki,t,a,0,x_left,x_right,diffusion_v2)
+    A_ad_test = setup_A(12,ki,t,a,alpha_central,x_left,x_right,advection_v2)
+    A_diff_test = setup_A(12,ki,t,a,alpha_central,x_left,x_right,diffusion_v2)
     eigvals_ad_test = np.linalg.eigvals(A_ad_test)
     Eig_vec_test_ad[idx] = np.max(np.abs(eigvals_ad_test))
     eigvals_diff_test = np.linalg.eigvals(A_diff_test)
     Eig_vec_test_diff[idx] = np.max(np.abs(eigvals_diff_test))
 
 plt.figure()
-plt.loglog(K_list_test,Eig_vec_test_ad,"--o",label="$\max{|\lambda(\mathcal{A}_{advection})|}$")
+plt.loglog(K_list_test, Eig_vec_test_ad, "--o", label="$\max{|\lambda(\mathcal{A}_{advection})|}$")
 # Fit a first-order polynomial (line)
-coefficients = np.polyfit(K_list_test, Eig_vec_test_ad, 1)
+coefficients = np.polyfit(np.log(K_list_test), np.log(Eig_vec_test_ad), 1)
 fit = np.poly1d(coefficients)
-#plt.loglog(K_list_test,fit(K_list_test),label="Linear fit")
-plt.loglog(K_list_test,K_list_test**(1.2)*20,label="$\mathcal{O}(K^{1.2})$")
+#plt.loglog(K_list_test, np.exp(fit(np.log(K_list_test))), label="Linear fit")
+plt.loglog(K_list_test, K_list_test**(1.0)*25, label="$\mathcal{O}(K^{1.0})$")
 
-plt.loglog(K_list_test,Eig_vec_test_diff,"--o",label="$\max{|\lambda(\mathcal{A}_{diffusion})|}$")
+plt.loglog(K_list_test, Eig_vec_test_diff, "--o", label="$\max{|\lambda(\mathcal{A}_{diffusion})|}$")
 # Fit a first-order polynomial (line)
-coefficients = np.polyfit(K_list_test, Eig_vec_test_diff, 1)
+coefficients = np.polyfit(np.log(K_list_test), np.log(Eig_vec_test_diff), 1)
 fit = np.poly1d(coefficients)
-#plt.loglog(K_list_test,fit(K_list_test),label="Quadradic fit")
-plt.loglog(K_list_test,(K_list_test**2)*10**(3.5),label="$\mathcal{O}(K^2)$")
+#plt.loglog(K_list_test, np.exp(fit(np.log(K_list_test))), label="Quadratic fit")
+plt.loglog(K_list_test, (K_list_test**2)*10**(3.5), label="$\mathcal{O}(K^2)$")
 
-plt.title("Scalability analysis with variying $K$ and fixed $N=12$")
+# Set specific ticks on the x-axis
+x_ticks = [11, 14, 18, 23, 29, 37, 48, 61, 78, 100]
+plt.xticks(x_ticks, labels=[str(tick) for tick in x_ticks])  # Add tick labels
+
+plt.title("Scalability Analysis of Largest Eigenvalue ($N=12$)")
 plt.legend()
-plt.xlabel("K")
+plt.xlabel("K: Number of Elements")
 plt.ylabel("$\max{|\lambda(\mathcal{A})|}$")
-
-plt.figure()
-plt.imshow(A_ad)
-plt.figure()
-plt.imshow(A_diff)
-
-plt_eig(Eig_mat_ad)
-plt_eig(Eig_mat_diff)
-
-plt_eig_2d(Eig_mat_ad)
-plt_eig_2d(Eig_mat_diff)
-
-eig_scale(Eig_vec_ad,K_list)
-eig_scale(Eig_vec_diff,K_list,order=3)
-
-
-plt.figure()
-
-plt.scatter(np.real(eigvals_ad),np.imag(eigvals_ad))
-
-
-plt.figure()
-
-plt.scatter(np.real(eigvals_diff),np.imag(eigvals_diff))
-
-
+plt.grid(True, which="both", linestyle="--")  # Add grid for better visualization
 plt.show()
+
+# plt.figure()
+# plt.imshow(A_ad)
+# plt.show()
+
+# plt.figure()
+# plt.imshow(A_diff)
+# plt.show()
+
+# plt_eig(Eig_mat_ad)
+# plt.show()
+
+# plt_eig(Eig_mat_diff)
+# plt.show()
+
+# plt_eig_2d(Eig_mat_ad)
+# plt.show()
+
+# plt_eig_2d(Eig_mat_diff)
+# plt.show()
+
+# eig_scale(Eig_vec_ad,K_list)
+# plt.show()
+
+# eig_scale(Eig_vec_diff,K_list,order=3)
+# plt.show()
+
+#%%
+
+N_list = np.arange(2,20,2)
+K_list = np.arange(2,20,2)
+
+# Create meshgrid
+N, K = np.meshgrid(N_list, K_list)
+
+# Define x-ticks for log-log plot
+x_ticks = [11, 14, 18, 23, 29, 37, 48, 61, 78, 100]
+
+# Create the subplot
+fig, axs = plt.subplots(1, 3, figsize=(12, 4))
+
+# 1. Scalability Analysis (Log-Log Plot)
+axs[0].loglog(K_list_test, Eig_vec_test_ad, "--o", label="$\max{|\lambda(\mathcal{A}_{advection})|}$")
+axs[0].loglog(K_list_test, K_list_test**(1)*22, label="$\mathcal{O}(K^{1})$")
+axs[0].loglog(K_list_test, Eig_vec_test_diff, "--o", label="$\max{|\lambda(\mathcal{A}_{diffusion})|}$")
+axs[0].loglog(K_list_test, (K_list_test**2)*10**(3.5), label="$\mathcal{O}(K^2)$")
+axs[0].set_xticks(x_ticks)
+axs[0].set_xticklabels([str(tick) for tick in x_ticks])
+axs[0].set_title("Scalability Analysis ($N=12$)")
+axs[0].set_xlabel("K: Number of Elements")
+axs[0].set_ylabel("$\max{|\lambda(\mathcal{A})|}$")
+axs[0].legend()
+axs[0].grid(True, which="both", linestyle="--")
+
+# 2. Largest Eigenvalue (Advection) - Pcolormesh Plot
+pcolormesh_ad = axs[1].pcolormesh(N, K, np.log10(Eig_mat_ad), shading='auto', cmap="viridis")
+cbar_ad = fig.colorbar(pcolormesh_ad, ax=axs[1], orientation='vertical', label="$\log(\max|\lambda(\mathcal{A})|)$")
+axs[1].set_title("Largest Eigenvalue (Advection)")
+axs[1].set_ylabel("K: number of elements")
+axs[1].set_xlabel("N: number of nodes")
+axs[1].vlines(12,min(K_list)-1,max(K_list)+1,linestyle="dashed",color="r",label="N=12")
+axs[1].legend(loc="upper left")
+
+# 3. Largest Eigenvalue (Diffusion) - Pcolormesh Plot
+pcolormesh_diff = axs[2].pcolormesh(N, K, np.log10(Eig_mat_diff), shading='auto', cmap="viridis")
+cbar_diff = fig.colorbar(pcolormesh_diff, ax=axs[2], orientation='vertical', label="$\log(\max|\lambda(\mathcal{A})|)$")
+axs[2].set_title("Largest Eigenvalue (Diffusion)")
+axs[2].set_ylabel("K: number of elements")
+axs[2].set_xlabel("N: number of nodes")
+axs[2].vlines(12,min(K_list)-1,max(K_list)+1,linestyle="dashed",color="r",label="N=12")
+axs[2].legend(loc="upper left")
+
+# Adjust layout
+plt.tight_layout()
+plt.show()
+
+#%%
+
+fig, axs = plt.subplots(1, 2, figsize=(10, 4))
+
+N = 12
+
+K_list = np.arange(2,10,2)
+
+for K_idx,K in enumerate(K_list):
+
+    A_ad = setup_A(N,K,t,a,alpha_central,x_left,x_right,advection_v2)
+    eigvals_ad = np.linalg.eigvals(A_ad)
+    axs[0].plot(np.real(eigvals_ad),np.imag(eigvals_ad),".",label=f"K = {K}")
+
+    A_diff = setup_A(N,K,t,a,alpha_central,x_left,x_right,diffusion_v2)
+    eigvals_diff = np.linalg.eigvals(A_diff)
+    axs[1].plot(np.real(eigvals_diff),np.imag(eigvals_diff),".",label=f"K = {K}")
+
+axs[0].set_title(f"Eigenvalues (Advection with $N={N}$)")
+axs[0].set_xlabel(r"$\text{Real}(\lambda(\mathcal{A}))$")
+axs[0].set_ylabel(r"$\text{Imag}(\lambda(\mathcal{A}))$")
+axs[0].grid(True, which="both", linestyle="--")
+axs[0].legend()
+
+axs[1].set_title(f"Eigenvalues (Diffusion with $N={N}$)")
+axs[1].set_xlabel(r"$\text{Real}(\lambda(\mathcal{A}))$")
+axs[1].set_ylabel(r"$\text{Imag}(\lambda(\mathcal{A}))$")
+axs[1].grid(True, which="both", linestyle="--")
+axs[1].legend()
+
+plt.tight_layout()
+plt.show()
+
+#%%
+
+
+
+
+
+
+
+
+

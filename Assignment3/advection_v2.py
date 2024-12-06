@@ -20,20 +20,20 @@ def f_func(t,u,Mk_inv,S,N,alpha,a,g0_val,formulation):
         
         if k == 0:
             
-            # left boundary of element
+            # left boundary of element (Non-Periodic)
             up_left    = g0_val(t,a)
             um_left    = u[k] 
             flux_left  = a*up_left 
+            
+            # left boundary of element (Periodic)
+            # up_left    = u[-1]
+            # um_left    = u[k] 
+            # flux_left = flux_star(up_left,um_left,alpha,a)
             
             # right boundary of element
             um_right   = u[k+N-1]
             up_right   = u[k+N] 
             flux_right = flux_star(up_right,um_right,alpha,a)
-            
-            # if formulation == "w":
-            #     rhs = lagrange_rhs_right*(flux_right)-lagrange_rhs_left*(flux_left)
-            # elif formulation == "s":
-            #     rhs = lagrange_rhs_right*(a*um_right-flux_right)-lagrange_rhs_left*(a*um_left-flux_left)
 
         elif k == (len(u)-N):
              
@@ -42,14 +42,15 @@ def f_func(t,u,Mk_inv,S,N,alpha,a,g0_val,formulation):
             up_left    = u[k-1] 
             flux_left  = flux_star(um_left,up_left,alpha,a)
             
-            # right boundary of element  
+            # right boundary of element (Non-Periodic)
             um_right   = u[-1] 
-            flux_right = a*um_right 
+            flux_right = a*um_right
             
-            # if formulation == "w":
-            #     rhs = lagrange_rhs_right*(flux_right)-lagrange_rhs_left*(flux_left)
-            # elif formulation == "s":
-            #     rhs = lagrange_rhs_right*(a*um_right-flux_right)-lagrange_rhs_left*(a*um_left-flux_left)
+            # right boundary of element (Periodic)
+            # up_right    = u[0]
+            # um_right    = u[k+N-1] 
+            # flux_right = flux_star(up_right,um_right,alpha,a)
+
 
         else:
  
@@ -62,11 +63,6 @@ def f_func(t,u,Mk_inv,S,N,alpha,a,g0_val,formulation):
             um_right   = u[k+N-1]
             up_right   = u[k+N]
             flux_right = flux_star(up_right,um_right,alpha,a)
-
-            # if formulation == "w":
-            #     rhs = lagrange_rhs_right*(flux_right)-lagrange_rhs_left*(flux_left)
-            # elif formulation == "s":
-            #     rhs = lagrange_rhs_right*(a*um_right-flux_right)-lagrange_rhs_left*(a*um_left-flux_left)
 
         if formulation == "w":
             
@@ -197,28 +193,6 @@ if __name__ == "__main__":
     plt.show()
 
 
-
-    #%%
-    N = 64
-    N_list = np.arange(5,100,5)
-    x_nodes = legendre.nodes(N)
-    #x_nodes = np.linspace(-1,1,N)
-    V,Vx,w = legendre.vander(x_nodes)
-    M = np.linalg.inv(V@V.T)
-    Dx = Vx@np.linalg.inv(V)
-    S = M@Dx
-    Minv = np.linalg.inv(M)
-    A = Minv @ S.T
-    
-    Dx[0] = 0
-    Dx[0,0] = 1
-    Dx[-1] = 0
-    Dx[-1,-1] = 1
-    
-    vals,vecs = scipy.linalg.eig(-Dx)
-    
-    plt.plot(np.real(vals),np.imag(vals),".")
-    
     
     
     
