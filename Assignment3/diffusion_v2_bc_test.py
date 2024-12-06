@@ -155,7 +155,7 @@ if __name__ == "__main__":
     number_element = 10
     x_nodes = legendre.nodes(N)
     x_total = total_grid_points(number_element,x_nodes,x_left,x_right)
-
+ 
     h = (x_total[-1]-x_total[0])/number_element
 
     V,Vx,_ = legendre.vander(x_nodes)
@@ -169,7 +169,7 @@ if __name__ == "__main__":
 
     max_step = 0.025
     t0 = 0.008
-    tf = 2.5
+    tf = 0.1
     formulation = "s"
     u0 = u_exact(x_total,t0,a)
 
@@ -236,6 +236,7 @@ if __name__ == "__main__":
     print(error)
     
 #%%
+    plt.figure()
     U = sol.y
     Integral_t = np.sum(M_total @ U,axis=0)
     plt.plot(sol.t,Integral_t)

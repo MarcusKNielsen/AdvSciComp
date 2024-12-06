@@ -19,14 +19,12 @@ def f_func(t,u,Mk_inv,D,S,N,alpha,a,formulation):
     lagrange_rhs_right = np.zeros(N)
     lagrange_rhs_right[-1] = 1
 
-    q = np.zeros_like(u)
-    for k in range(0,len(u),N):
-         q[k:int(k+N)] = D@u[k:int(k+N)]
+    q = (D @ (u.reshape(-1, N)).T).T.ravel()  # Apply D to each block and reshape back
 
     for k in range(0,len(u),N):
 
         uk = u[k:int(k+N)]
-        qk = q[k:int(k+N)]
+        qk = q[k:int(k+N)] 
 
         if k == 0:
 
@@ -47,13 +45,6 @@ def f_func(t,u,Mk_inv,D,S,N,alpha,a,formulation):
             um_right   = u[k+N-1]
             up_right   = u[k+N] 
             flux_right_Q = flux_star(up_right,um_right,alpha,np.sqrt(a))
-
-            # if formulation == "w":
-            #     rhs_u = lagrange_rhs_right*(flux_right_U)-lagrange_rhs_left*(flux_left_U)
-            #     rhs_q = lagrange_rhs_right*(flux_right_Q)-lagrange_rhs_left*(flux_left_Q)
-            # elif formulation == "s":
-            #     rhs_u = lagrange_rhs_right*(np.sqrt(a)*qm_right-flux_right_U)-lagrange_rhs_left*(np.sqrt(a)*qm_left-flux_left_U)
-            #     rhs_q = lagrange_rhs_right*(np.sqrt(a)*um_right-flux_right_Q)-lagrange_rhs_left*(np.sqrt(a)*um_left-flux_left_Q)
 
         elif k == (len(u)-N):
 
@@ -76,13 +67,6 @@ def f_func(t,u,Mk_inv,D,S,N,alpha,a,formulation):
             # Flux right
             um_right      = u[-1] 
             flux_right_Q  = np.sqrt(a)*um_right
-
-            # if formulation == "w":
-            #     rhs_u = lagrange_rhs_right*(flux_right_U)-lagrange_rhs_left*(flux_left_U)
-            #     rhs_q = lagrange_rhs_right*(flux_right_Q)-lagrange_rhs_left*(flux_left_Q)
-            # elif formulation == "s":
-            #     rhs_u = lagrange_rhs_right*(np.sqrt(a)*qm_right-flux_right_U)-lagrange_rhs_left*(np.sqrt(a)*qm_left-flux_left_U)
-            #     rhs_q = lagrange_rhs_right*(np.sqrt(a)*um_right-flux_right_Q)-lagrange_rhs_left*(np.sqrt(a)*um_left-flux_left_Q)
 
         else:
 
@@ -108,13 +92,6 @@ def f_func(t,u,Mk_inv,D,S,N,alpha,a,formulation):
             up_right   = u[k+N]
             flux_right_Q = flux_star(up_right,um_right,alpha,np.sqrt(a))
            
-            # if formulation == "w":
-            #     rhs_u = lagrange_rhs_right*(flux_right_U)-lagrange_rhs_left*(flux_left_U)
-            #     rhs_q = lagrange_rhs_right*(flux_right_Q)-lagrange_rhs_left*(flux_left_Q)
-            # elif formulation == "s":
-            #     rhs_u = lagrange_rhs_right*(np.sqrt(a)*qm_right-flux_right_U)-lagrange_rhs_left*(np.sqrt(a)*qm_left-flux_left_U)
-            #     rhs_q = lagrange_rhs_right*(np.sqrt(a)*um_right-flux_right_Q)-lagrange_rhs_left*(np.sqrt(a)*um_left-flux_left_Q)
-
         if formulation == "w":
             
             rhs_u = lagrange_rhs_right*(flux_right_U)-lagrange_rhs_left*(flux_left_U)
@@ -146,8 +123,8 @@ def u_exact(x,t,a):
 
 if __name__ == "__main__":
      
-    x_left = -1
-    x_right = 1
+    x_left = -2
+    x_right = 2
     Nm1 = 20
     N = Nm1+1
     number_element = 10
@@ -165,9 +142,9 @@ if __name__ == "__main__":
     a = 0.5
     alpha = 1.0 
 
-    max_step = 0.00001
+    max_step = 0.1
     t0 = 0.008
-    tf = 0.01
+    tf = 1.0
     formulation = "s"
     u0 = u_exact(x_total,t0,a)
 

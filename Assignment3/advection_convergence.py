@@ -14,7 +14,7 @@ a = 1.0
 alpha = 0.0
 #max_step = 0.00001 gamle med 1 orden for lidt
 #tf = 0.0001 gamle med 1 orden for lidt
-max_step = 0.0001
+#max_step = 0.0001
 #tf = 1.0
 tf = 0.1
 
@@ -44,6 +44,9 @@ for N_idx,N in enumerate(N_list):
         Mk_inv = np.linalg.inv(Mk) 
         Dx = Vx@np.linalg.inv(V)
         S = M@Dx
+
+        alpha = 0.5
+        max_step = alpha*2.51/(108.41511343*np.max(N,K)**2)
 
         t_start = perf_counter()
         sol = solve_ivp(f_func, [0, tf], u0, args=(Mk_inv,S,N,alpha,a,g0_val,formulation), max_step=max_step, dense_output=True, method="RK23")

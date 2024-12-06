@@ -21,7 +21,7 @@ def f_func(t,u,Mk_inv,S,N,alpha,a,g0_val,formulation):
         if k == 0:
             
             # left boundary of element
-            up_left    = g0_val(t)
+            up_left    = g0_val(t,a)
             um_left    = u[k] 
             flux_left  = a*up_left 
             
@@ -36,7 +36,7 @@ def f_func(t,u,Mk_inv,S,N,alpha,a,g0_val,formulation):
             #     rhs = lagrange_rhs_right*(a*um_right-flux_right)-lagrange_rhs_left*(a*um_left-flux_left)
 
         elif k == (len(u)-N):
-            
+             
             # left boundary of element
             um_left    = u[k]
             up_left    = u[k-1] 
@@ -91,7 +91,7 @@ def total_grid_points(number_element,x_nodes,a,b):
 def g_func(x,t,a):
     return np.sin(np.pi*(x-a*t))
 
-def g0_val(t):
+def g0_val(t,a):
     return np.sin(np.pi*(-1-a*t))
 
 if __name__ == "__main__":
@@ -102,11 +102,11 @@ if __name__ == "__main__":
     x_left = -1
     x_right = 1
     N = 5
-    number_element = 10
+    K = 10
     x_nodes = legendre.nodes(N) 
-    x_total = total_grid_points(number_element,x_nodes,x_left,x_right)
+    x_total = total_grid_points(K,x_nodes,x_left,x_right)
     u0 =  np.sin(np.pi*x_total) # scipy.stats.norm.pdf(x_total,scale=0.1)  # 
-    h = (x_total[-1]-x_total[0])/number_element
+    h = (x_total[-1]-x_total[0])/K
     
     V,Vx,w = legendre.vander(x_nodes)
     M = np.linalg.inv(V@V.T)
@@ -116,8 +116,9 @@ if __name__ == "__main__":
     S = M@Dx
     a = 1.0
     alpha = 1.0 
-    max_step = 0.001 
-    tf = 6
+    alpha_stability = 0.5
+    max_step = 0.01 #alpha_stability*2.51/(108.41511343*np.max(N,K)**2)
+    tf = 2
     formulation = "w" 
     
     sol = solve_ivp(f_func, [0, tf], u0, args=(Mk_inv,S,N,alpha,a,g0_val,formulation), max_step=max_step, dense_output=True, method="RK23")

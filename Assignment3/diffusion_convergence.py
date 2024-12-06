@@ -40,7 +40,7 @@ for N_idx,N in enumerate(N_list):
         u0 = u_exact(x_total,t0,a)
 
         t_start = perf_counter()
-        sol = solve_ivp(f_func, [t0, tf], u0, args=(Mk_inv,Dx,S,N,alpha,a), max_step=max_step, dense_output=True, method="Radau")
+        sol = solve_ivp(f_func, [t0, tf], u0, args=(Mk_inv,Dx,S,N,alpha,a,"s"), max_step=max_step, dense_output=True, method="Radau")
         t_slut = perf_counter() - t_start
 
         err = sol.y[:,-1] - u_exact(x_total,tf,a)
