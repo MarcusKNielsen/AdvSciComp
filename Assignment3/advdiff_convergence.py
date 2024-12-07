@@ -57,7 +57,7 @@ plt.title("Convergence Test (advection-diffusion equation)")
 convergence_rate = np.zeros(len(N_list))
 for N_idx,N in enumerate(N_list):
     
-    plt.loglog(K_list,error[N_idx],"-o",label=f"N={N-1}")
+    plt.loglog(K_list,error[N_idx],"--o",label=f"N={N-1}")
 
     # Fit a first-order polynomial (line)
     coefficients = np.polyfit(np.log(K_list)[15:], np.log(error[N_idx])[15:], 1)
@@ -65,7 +65,7 @@ for N_idx,N in enumerate(N_list):
     # Extract slope (a) and intercept (b)
     a, b = coefficients
     
-    print(f"N = {N}")
+    print(f"N = {N-1}")
     print(f"a = {a}")
     #print(f"Intercept (b): {b}")
     convergence_rate[N_idx] = np.abs(a)

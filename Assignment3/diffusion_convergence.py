@@ -72,7 +72,7 @@ for N_idx,N in enumerate(N_list):
 plt.xticks(K_list[::2], labels=K_list[::2])
 plt.xlabel(r"$K$: Number of Elements")
 plt.ylabel(r"$\Vert u - u_h \Vert_{L^2}$")
-plt.legend()
+plt.legend() 
 
 # Display results as a table
 print("N \\ K", *K_list, "Convergence rate", sep="\t")

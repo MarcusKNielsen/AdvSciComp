@@ -32,8 +32,10 @@ def f_func(t,u,Mk_inv,D,S,N,alpha,a,d,formulation):
 
             # Flux for Uk equation
             # Flux left
-            qm_left      = q[k] 
-            flux_left_U  = -np.sqrt(d)*qm_left 
+            qm_left   = q[k]
+            qp_left   = -qm_left
+            flux_left_U = flux_star(qm_left,qp_left,alpha,np.sqrt(d))
+ 
             # Flux right
             qm_right   = q[k+N-1]
             qp_right   = q[k+N] 
@@ -49,12 +51,16 @@ def f_func(t,u,Mk_inv,D,S,N,alpha,a,d,formulation):
             flux_right_Q = flux_star(up_right,um_right,alpha,np.sqrt(d))
 
             #%% Advection
-            # left boundary of element
-            up_left    = 0
-            um_left    = u[k] 
-            flux_left_ad  = a*up_left 
+            # left boundary of element 
+            #up_left    = 0 
+            #um_left    = u[k] 
+            #flux_left_ad  = a*up_left 
             
-            # right boundary of element
+            um_left   = u[k]
+            up_left   = -um_left
+            flux_left_ad = flux_star(um_left,up_left,alpha,a)
+
+            # right boundary of element 
             um_right   = u[k+N-1]
             up_right   = u[k+N] 
             flux_right_ad = flux_star(up_right,um_right,alpha,a)
@@ -62,7 +68,7 @@ def f_func(t,u,Mk_inv,D,S,N,alpha,a,d,formulation):
         elif k == (len(u)-N):
 
             #%% Diffusion
-            # Flux for Uk equation
+            # Flux for Uk equation 
             # Flux left
             qm_left   = q[k]
             qp_left   = q[k-1] 
@@ -70,9 +76,10 @@ def f_func(t,u,Mk_inv,D,S,N,alpha,a,d,formulation):
 
             # Flux right
             qm_right      = q[-1] 
-            flux_right_U  = -np.sqrt(d)*qm_right
+            qp_right      = -qm_right
+            flux_right_U  = flux_star(qp_right,qm_right,alpha,np.sqrt(d))
 
-            # Flux for Q equation
+            # Flux for Q equation 
             # Flux left
             um_left   = u[k]
             up_left   = u[k-1] 
@@ -83,26 +90,29 @@ def f_func(t,u,Mk_inv,D,S,N,alpha,a,d,formulation):
             flux_right_Q  = np.sqrt(d)*um_right
 
             #%% Advection
-            # left boundary of element
+            # left boundary of element 
             um_left    = u[k]
             up_left    = u[k-1] 
             flux_left_ad  = flux_star(um_left,up_left,alpha,a)
             
             # right boundary of element  
-            um_right   = u[-1] 
-            flux_right_ad = a*um_right 
+            #um_right   = u[-1] 
+            #flux_right_ad = a*um_right 
+            um_right      = u[-1] 
+            up_right      = -um_right
+            flux_right_ad  = flux_star(up_right,um_right,alpha,a)
 
         else:
             
             #%% Diffusion
 
             # Flux for Uk equation
-            # left boundary of element
+            # left boundary of element 
             qm_left    = q[k]
             qp_left    = q[k-1] 
             flux_left_U  = flux_star(qm_left,qp_left,alpha,np.sqrt(d))
             
-            # right boundary of element
+            # right boundary of element 
             qm_right   = q[k+N-1]
             qp_right   = q[k+N]
             flux_right_U = flux_star(qp_right,qm_right,alpha,np.sqrt(d))
@@ -124,7 +134,7 @@ def f_func(t,u,Mk_inv,D,S,N,alpha,a,d,formulation):
             up_left    = u[k-1] 
             flux_left_ad  = flux_star(um_left,up_left,alpha,a)
             
-            # right boundary of element
+            # right boundary of element 
             um_right   = u[k+N-1]
             up_right   = u[k+N]
             flux_right_ad = flux_star(up_right,um_right,alpha,a)
@@ -177,11 +187,11 @@ if __name__ == "__main__":
     Dx = Vx@np.linalg.inv(V)
     S = M@Dx
     a = 1
-    d = 0.2
+    d = 1.2
     alpha = 1
     max_step = 0.001
     t0 = 0.08
-    tf = 0.09
+    tf = 1.5
     formulation = "s"
 
     u0 = u_exact(x_total,t0,a,d)
@@ -207,5 +217,11 @@ if __name__ == "__main__":
 
     # Add the colorbar
     plt.colorbar(pcm, label="u(x,t)")
+
+    I = np.eye(number_element)
+    M_total = np.kron(I,Mk)
+    
+    integral = np.sum(M_total@sol.y,axis=0)
+    print(integral)
 
     plt.show()

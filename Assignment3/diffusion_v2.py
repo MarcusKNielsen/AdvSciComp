@@ -30,7 +30,7 @@ def f_func(t,u,Mk_inv,D,S,N,alpha,a,formulation):
 
             # Flux for Uk equation
             
-            # Flux left (Reflective)
+            # Flux left (Reflective) 
             qm_left   = q[k]
             qp_left   = -qm_left
             flux_left_U = flux_star(qm_left,qp_left,alpha,np.sqrt(a))
@@ -47,7 +47,7 @@ def f_func(t,u,Mk_inv,D,S,N,alpha,a,formulation):
 
             # Flux for Q equation
             
-            # Flux left
+            # Flux left 
             um_left     = u[k] 
             flux_left_Q  = np.sqrt(a)*um_left 
             # Flux right
