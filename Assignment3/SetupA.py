@@ -4,7 +4,7 @@ import numpy as np
 import func.legendre as legendre
 import matplotlib.pyplot as plt
 import advection_v2 
-import diffusion_v2
+import diffusion_v2 
 
 
 def scalability(method,order=1):
@@ -267,37 +267,97 @@ plt.tight_layout()
 plt.show()
 
 #%%
+N_list = np.arange(2,20,2)
+K_list = np.arange(2,20,2)
 
+# Create meshgrid
+N, K = np.meshgrid(N_list, K_list)
+
+# Define x-ticks for log-log plot
+x_ticks = [11, 14, 18, 23, 29, 37, 48, 61, 78, 100]
+
+# Increase font sizes for the plot
+label_fontsize = 20  # Font size for labels (xlabel, ylabel)
+legend_fontsize = 14  # Font size for legends
+title_fontsize = 22  # Font size for titles
+tick_fontsize = 12  # Font size for ticks
+
+# Create the subplot
+fig, axs = plt.subplots(1, 2, figsize=(12, 4))
+
+# 1. Scalability Analysis (Log-Log Plot)
+axs[0].loglog(K_list_test, Eig_vec_test_ad, "--o", label="$\max{|\lambda(\mathcal{A}_{advection})|}$")
+axs[0].loglog(K_list_test, K_list_test**(1)*22, label="$\mathcal{O}(K^{1})$")
+axs[0].loglog(K_list_test, Eig_vec_test_diff, "--o", label="$\max{|\lambda(\mathcal{A}_{diffusion})|}$")
+axs[0].loglog(K_list_test, (K_list_test**2)*10**(3.5), label="$\mathcal{O}(K^2)$")
+axs[0].set_xticks(x_ticks)
+axs[0].set_xticklabels([str(tick) for tick in x_ticks], fontsize=tick_fontsize)
+axs[0].set_title("Scalability Analysis ($N=12$)", fontsize=title_fontsize)
+axs[0].set_xlabel("K: Number of Elements", fontsize=label_fontsize)
+axs[0].set_ylabel("$\max{|\lambda(\mathcal{A})|}$", fontsize=label_fontsize)
+axs[0].legend(fontsize=legend_fontsize)
+axs[0].grid(True, which="both", linestyle="--")
+
+# 2. Largest Eigenvalue (Advection) - Pcolormesh Plot
+pcolormesh_ad = axs[1].pcolormesh(N, K, np.log10(Eig_mat_ad), shading='auto', cmap="viridis")
+cbar_ad = fig.colorbar(pcolormesh_ad, ax=axs[1], orientation='vertical')
+cbar_ad.ax.tick_params(labelsize=tick_fontsize)  # Adjust colorbar tick fontsize
+cbar_ad.set_label("$\log(\max|\lambda(\mathcal{A})|)$", fontsize=label_fontsize)
+axs[1].set_title("Largest Eigenvalue (Advection)", fontsize=title_fontsize)
+axs[1].set_ylabel("K: number of elements", fontsize=label_fontsize)
+axs[1].set_xlabel("N: number of nodes", fontsize=label_fontsize)
+axs[1].vlines(12, min(K_list)-1, max(K_list)+1, linestyle="dashed", color="r", label="N=12")
+axs[1].legend(loc="upper left", fontsize=legend_fontsize)
+
+# Adjust layout
+plt.tight_layout()
+plt.show()
+
+#%%
+
+# Increase font sizes for the plot
+label_fontsize = 20  # Font size for labels (xlabel, ylabel)
+legend_fontsize = 14  # Font size for legends
+title_fontsize = 22  # Font size for titles
+tick_fontsize = 10  # Font size for ticks
+
+# Create the subplot
 fig, axs = plt.subplots(1, 2, figsize=(10, 4))
 
 N = 12
+K_list = np.arange(2, 10, 2)
 
-K_list = np.arange(2,10,2)
-
-for K_idx,K in enumerate(K_list):
-
-    A_ad = setup_A(N,K,t,a,alpha_central,x_left,x_right,advection_v2)
+for K_idx, K in enumerate(K_list):
+    # Compute and plot eigenvalues for advection
+    A_ad = setup_A(N, K, t, a, alpha_upwind, x_left, x_right, advection_v2)
     eigvals_ad = np.linalg.eigvals(A_ad)
-    axs[0].plot(np.real(eigvals_ad),np.imag(eigvals_ad),".",label=f"K = {K}")
+    axs[0].plot(np.real(eigvals_ad), np.imag(eigvals_ad), ".", label=f"$K = {K}$, $N={N}$")
 
-    A_diff = setup_A(N,K,t,a,alpha_central,x_left,x_right,diffusion_v2)
+    # Compute and plot eigenvalues for diffusion
+    A_diff = setup_A(N, K, t, a, alpha_central, x_left, x_right, diffusion_v2)
     eigvals_diff = np.linalg.eigvals(A_diff)
-    axs[1].plot(np.real(eigvals_diff),np.imag(eigvals_diff),".",label=f"K = {K}")
+    axs[1].plot(np.real(eigvals_diff), np.imag(eigvals_diff), ".", label=f"$K = {K}$, $N={N}$")
 
-axs[0].set_title(f"Eigenvalues (Advection with $N={N}$)")
-axs[0].set_xlabel(r"$\text{Real}(\lambda(\mathcal{A}))$")
-axs[0].set_ylabel(r"$\text{Imag}(\lambda(\mathcal{A}))$")
+# Adjust titles, labels, legends, and grids for the first subplot
+axs[0].set_title(f"Eigenvalues (Advection)", fontsize=title_fontsize)
+axs[0].set_xlabel(r"$\text{Real}(\lambda(\mathcal{A}))$", fontsize=label_fontsize)
+axs[0].set_ylabel(r"$\text{Imag}(\lambda(\mathcal{A}))$", fontsize=label_fontsize)
+axs[0].tick_params(axis='both', which='major', labelsize=tick_fontsize)
 axs[0].grid(True, which="both", linestyle="--")
-axs[0].legend()
+axs[0].legend(fontsize=legend_fontsize)
 
-axs[1].set_title(f"Eigenvalues (Diffusion with $N={N}$)")
-axs[1].set_xlabel(r"$\text{Real}(\lambda(\mathcal{A}))$")
-axs[1].set_ylabel(r"$\text{Imag}(\lambda(\mathcal{A}))$")
+# Adjust titles, labels, legends, and grids for the second subplot
+axs[1].set_title(f"Eigenvalues (Diffusion)", fontsize=title_fontsize)
+axs[1].set_xlabel(r"$\text{Real}(\lambda(\mathcal{A}))$", fontsize=label_fontsize)
+axs[1].set_ylabel(r"$\text{Imag}(\lambda(\mathcal{A}))$", fontsize=label_fontsize)
+axs[1].tick_params(axis='both', which='major', labelsize=tick_fontsize)
 axs[1].grid(True, which="both", linestyle="--")
-axs[1].legend()
+axs[1].legend(fontsize=legend_fontsize)
 
+# Adjust layout
 plt.tight_layout()
 plt.show()
+
 
 #%%
 
