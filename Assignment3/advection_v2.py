@@ -51,7 +51,6 @@ def f_func(t,u,Mk_inv,S,N,alpha,a,g0_val,formulation):
             # um_right    = u[k+N-1] 
             # flux_right = flux_star(up_right,um_right,alpha,a)
 
-
         else:
  
             # left boundary of element
@@ -89,6 +88,9 @@ def g_func(x,t,a):
 
 def g0_val(t,a):
     return np.sin(np.pi*(-1-a*t))
+
+def max_step_func(C,K):
+    return (C * 2.51)/(14*K**(1.2))
 
 if __name__ == "__main__":
     

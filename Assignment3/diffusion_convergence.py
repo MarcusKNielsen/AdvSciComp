@@ -56,23 +56,31 @@ plt.title("Convergence Test (Diffusion)")
 convergence_rate = np.zeros(len(N_list))
 for N_idx,N in enumerate(N_list):
     
-    plt.loglog(K_list,error[N_idx],"-o",label=f"N={N-1}")
+    plt.loglog(K_list,error[N_idx],"--o",label=f"N={N-1}")
 
     # Fit a first-order polynomial (line)
-    coefficients = np.polyfit(np.log(K_list)[15:], np.log(error[N_idx])[15:], 1)
+    coefficients = np.polyfit(np.log(K_list), np.log(error[N_idx]), 1)
 
     # Extract slope (a) and intercept (b)
     a, b = coefficients
     
-    print(f"N = {N}")
+    print(f"N = {N-1}")
     print(f"a = {a}")
     #print(f"Intercept (b): {b}")
     convergence_rate[N_idx] = np.abs(a)
 
+
+colors = plt.cm.tab10.colors
+
+plt.loglog(K_list, 0.1*K_list.astype(float)**(-1), color = colors[0], label=rf"$\mathcal{{O}}(h^{{{1}}})$")
+plt.loglog(K_list, 2.5*K_list.astype(float)**(-3), color = colors[2], label=rf"$\mathcal{{O}}(h^{{{3}}})$")
+plt.loglog(K_list, 5.5*K_list.astype(float)**(-5), color = colors[4], label=rf"$\mathcal{{O}}(h^{{{5}}})$")
+plt.loglog(K_list, 9.5*K_list.astype(float)**(-7), color = colors[6], label=rf"$\mathcal{{O}}(h^{{{7}}})$")
+
 plt.xticks(K_list[::2], labels=K_list[::2])
 plt.xlabel(r"$K$: Number of Elements")
 plt.ylabel(r"$\Vert u - u_h \Vert_{L^2}$")
-plt.legend() 
+plt.legend()
 
 # Display results as a table
 print("N \\ K", *K_list, "Convergence rate", sep="\t")
@@ -91,3 +99,44 @@ plt.show()
 
 
 # %%
+
+plt.figure(figsize=(6, 4))  # Adjust figure size if needed
+plt.title("Convergence Test (Diffusion)")
+convergence_rate = np.zeros(len(N_list))
+for N_idx, N in enumerate(N_list):
+    plt.loglog(K_list, error[N_idx], "--o", label=f"N={N-1}")
+
+    coefficients = np.polyfit(np.log(K_list), np.log(error[N_idx]), 1)
+    a, b = coefficients
+    print(f"N = {N-1}")
+    print(f"a = {a}")
+    convergence_rate[N_idx] = np.abs(a)
+
+colors = plt.cm.tab10.colors
+plt.loglog(K_list, 0.1*K_list.astype(float)**(-1), color=colors[0], label=rf"$\mathcal{{O}}(h^{{{1}}})$")
+plt.loglog(K_list, 2.5*K_list.astype(float)**(-3), color=colors[2], label=rf"$\mathcal{{O}}(h^{{{3}}})$")
+plt.loglog(K_list, 5.5*K_list.astype(float)**(-5), color=colors[4], label=rf"$\mathcal{{O}}(h^{{{5}}})$")
+plt.loglog(K_list[:14], 9.5*K_list[:14].astype(float)**(-7), color=colors[6], label=rf"$\mathcal{{O}}(h^{{{7}}})$")
+
+plt.xticks(K_list[::2], labels=K_list[::2])
+plt.xlabel(r"$K$: Number of Elements")
+plt.ylabel(r"$\Vert u - u_h \Vert_{L^2}$")
+
+plt.legend(loc="upper left", bbox_to_anchor=(1, 1))  # Place legend outside
+plt.subplots_adjust(right=0.8)  # Adjust space on the right to make room for the legend
+
+# Display results as a table
+print("N \\ K", *K_list, "Convergence rate", sep="\t")
+for N_idx, N in enumerate(N_list):
+    row = [f"{error[N_idx, K_idx]:.1E}" if error[N_idx, K_idx] != 0 else "-" for K_idx in range(len(K_list))]
+    rate = f"{convergence_rate[N_idx]:.1f}"
+    print(f"{N-1}\t" + "\t".join(row) + f"\t{rate}")
+
+print("N \\ K", *K_list, "Convergence rate", sep="\t")
+for N_idx, N in enumerate(N_list):
+    row = [f"{(times[N_idx, K_idx]/times[0, 0]):.2f}" if times[N_idx, K_idx] != 0 else "-" for K_idx in range(len(K_list))]
+    rate = f"{convergence_rate[N_idx]:.1f}"
+    print(f"{N-1}\t" + "\t".join(row) + f"\t{rate}")
+
+plt.show()
+
