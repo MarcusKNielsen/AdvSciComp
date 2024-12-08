@@ -21,15 +21,18 @@ x  = fourier.nodes(Nx)
 Dx = fourier.diff_matrix(Nx)
 
 # y direction
-Ny = 51
+Ny = 31
 y  = fourier.nodes(Ny)
 Dy = fourier.diff_matrix(Ny)
 
 X,Y = np.meshgrid(x,y)
 
 # Tensor Product
-Dx = np.kron(np.eye(Ny),Dx)
-Dy = np.kron(Dy,np.eye(Nx))
+#Dx = np.kron(np.eye(Ny),Dx)
+#Dy = np.kron(Dy,np.eye(Nx))
+
+Dx = np.kron(Dx,np.eye(Ny))
+Dy = np.kron(np.eye(Nx),Dy)
 
 # Compute the right-hand side
 b = (-2)*u_exact(X,Y)

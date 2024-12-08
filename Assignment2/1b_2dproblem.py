@@ -17,7 +17,7 @@ import fourier as f
 
 
 def solve_PDE(Nw,Ntheta):
-    w = l.nodes(Nw)          # r expressed in w
+    w = l.nodes(Nw-1)          # r expressed in w
     theta = f.nodes(Ntheta)  # theta
     
     # r variable

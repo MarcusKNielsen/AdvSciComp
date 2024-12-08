@@ -11,9 +11,7 @@ def u_exact(x,y):
 from legendre import vander, nodes
 
 
-
-
-N = 32
+N = 10
 x = nodes(N)
 V,Vx,_ = vander(x)
 D = Vx @ inv(V)
